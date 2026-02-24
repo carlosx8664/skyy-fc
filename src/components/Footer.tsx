@@ -1,38 +1,121 @@
 import React from 'react';
-import { Facebook } from 'lucide-react';
-import { CLUB_INFO } from '../data/clubData';
+import { Facebook, MapPin, Phone, Mail, Globe } from 'lucide-react';
+import skyyLogo from '../assets/skyyfc.png';
 
 export const Footer = ({ isDarkMode }: { isDarkMode: boolean }) => {
+  const CLUB_INFO = {
+    name: 'SKYY FC',
+    description: 'Welcome to the Official page of Skyy Football Club (A Division One Club in Ghana).',
+    address: 'Skyy House, Takoradi',
+    phone: '054 923 2040',
+    email: 'skyydirector@yahoo.com',
+    website: 'skyyfc.com',
+    websiteUrl: 'https://skyyfc.com',
+    socials: {
+      facebook: 'https://www.facebook.com/skyyfcdaboase/',
+    },
+  };
+
+  const linkClass = `transition-colors hover:text-[#EFDC43] ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`;
+
   return (
-    <footer className={`border-t py-16 ${isDarkMode ? 'bg-zinc-950 border-white/5' : 'bg-white border-zinc-200'}`}>
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-12">
-        <div className="text-center md:text-left">
-          <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
-            <div className="w-8 h-8 bg-[#f5a623] rounded-full flex items-center justify-center font-black text-black text-sm">S</div>
-            <span className={`text-xl font-black tracking-tighter uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-              {CLUB_INFO.name}
-            </span>
+    <footer className={`border-t pt-16 pb-8 ${isDarkMode ? 'bg-zinc-950 border-white/5' : 'bg-white border-zinc-200'}`}>
+      <div className="max-w-7xl mx-auto px-6">
+
+        {/* ── Main Footer Content ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+
+          {/* Col 1 — Brand */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <img src={skyyLogo} alt="SKYY FC" className="h-12 w-auto object-contain" />
+              <span className={`text-xl font-black tracking-tighter uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                {CLUB_INFO.name}
+              </span>
+            </div>
+            <p className={`text-sm leading-relaxed max-w-xs ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              {CLUB_INFO.description}
+            </p>
           </div>
-          <p className="text-zinc-500 text-sm max-w-xs">
-            The official website of {CLUB_INFO.name}. Based in {CLUB_INFO.location}.
+
+          {/* Col 2 — Contact Info */}
+          <div>
+            <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+              Contact
+            </h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <a
+                  href={`https://maps.google.com/?q=Skyy+House+Takoradi+Ghana`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-start gap-2 ${linkClass}`}
+                >
+                  <MapPin size={14} className="text-[#EFDC43] mt-0.5 shrink-0" />
+                  {CLUB_INFO.address}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`tel:${CLUB_INFO.phone.replace(/\s/g, '')}`}
+                  className={`flex items-center gap-2 ${linkClass}`}
+                >
+                  <Phone size={14} className="text-[#EFDC43] shrink-0" />
+                  {CLUB_INFO.phone}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${CLUB_INFO.email}`}
+                  className={`flex items-center gap-2 ${linkClass}`}
+                >
+                  <Mail size={14} className="text-[#EFDC43] shrink-0" />
+                  {CLUB_INFO.email}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={CLUB_INFO.websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-2 ${linkClass}`}
+                >
+                  <Globe size={14} className="text-[#EFDC43] shrink-0" />
+                  {CLUB_INFO.website}
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 3 — Social */}
+          <div>
+            <h4 className={`text-xs font-black uppercase tracking-widest mb-4 ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+              Follow Us
+            </h4>
+            <a
+              href={CLUB_INFO.socials.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-3 text-sm font-bold transition-colors hover:text-[#EFDC43] ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isDarkMode ? 'bg-white/5 hover:bg-[#EFDC43] hover:text-black' : 'bg-black/5 hover:bg-[#EFDC43] hover:text-black'}`}>
+                <Facebook size={18} />
+              </div>
+              Facebook
+            </a>
+          </div>
+        </div>
+
+        {/* ── Bottom Bar ── */}
+        <div className={`border-t pt-6 flex flex-col md:flex-row items-center justify-between gap-4 ${isDarkMode ? 'border-white/5' : 'border-zinc-100'}`}>
+          <p className={`text-[10px] uppercase tracking-[0.2em] ${isDarkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+            © {new Date().getFullYear()} {CLUB_INFO.name}. All Rights Reserved.
+          </p>
+          <p className={`text-[10px] uppercase tracking-[0.2em] ${isDarkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+            Ghana Division One League
           </p>
         </div>
 
-        <div className="flex flex-col items-center md:items-end gap-6">
-          <div className="flex gap-6">
-            <a 
-              href={CLUB_INFO.socials.facebook} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isDarkMode ? 'bg-white/5 text-white hover:bg-[#f5a623] hover:text-black' : 'bg-black/5 text-zinc-900 hover:bg-[#f5a623] hover:text-black'}`}
-            >
-              <Facebook size={24} />
-            </a>
-          </div>
-          <p className="text-zinc-600 text-[10px] uppercase tracking-[0.2em]">
-            © {new Date().getFullYear()} {CLUB_INFO.name}. All Rights Reserved.
-          </p>
-        </div>
       </div>
     </footer>
   );

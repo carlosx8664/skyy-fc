@@ -10,7 +10,7 @@ export const CLUB_INFO = {
   tagline: "The Pride of Daboase",
   location: "Daboase, Western Region, Ghana",
   colors: {
-    primary: "#f5a623", // Gold/Amber
+    primary: "#EFDC43", // Gold/Amber
     secondary: "#000000",
   },
   socials: {

@@ -1,53 +1,232 @@
-import React from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Newspaper, ArrowLeft } from 'lucide-react';
-import { NEWS } from '../data/clubData';
+import { ChevronLeft, Send, MessageCircle } from 'lucide-react';
+import { client } from '../lib/sanityClient';
 import { Sidebar } from '../components/Sidebar';
 
+interface Comment {
+  id: string;
+  name: string;
+  text: string;
+  timestamp: string;
+}
+
+interface Article {
+  _id: string;
+  title: string;
+  date: string;
+  excerpt: string;
+  author?: string;
+  videoUrl?: string;
+}
+
+// Converts any YouTube URL format to an embed URL
+const getEmbedUrl = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.hostname === 'youtu.be') {
+      return `https://www.youtube.com/embed${urlObj.pathname}`;
+    }
+    const videoId = urlObj.searchParams.get('v');
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    return url;
+  } catch {
+    return url;
+  }
+};
+
+const formatDate = (dateStr: string) =>
+  new Date(dateStr).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).toUpperCase();
+
 export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
-  const { id } = useParams();
-  const article = NEWS.find(n => n.id === Number(id));
+  const { id } = useParams<{ id: string }>();
+  const [article, setArticle] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [name, setName] = useState('');
+  const [text, setText] = useState('');
+
+  useEffect(() => {
+    client
+      .fetch(`*[_type == "news" && _id == $id][0] {
+        _id,
+        title,
+        date,
+        excerpt,
+        author,
+        videoUrl
+      }`, { id })
+      .then((data: Article) => {
+        setArticle(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+
+    const saved = localStorage.getItem(`comments-${id}`);
+    if (saved) setComments(JSON.parse(saved));
+  }, [id]);
+
+  const handleComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !text.trim()) return;
+
+    const newComment: Comment = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      text: text.trim(),
+      timestamp: new Date().toLocaleString('en-GB'),
+    };
+
+    const updated = [newComment, ...comments];
+    setComments(updated);
+    localStorage.setItem(`comments-${id}`, JSON.stringify(updated));
+    setName('');
+    setText('');
+  };
+
+  if (loading) {
+    return (
+      <div className={`pt-32 pb-24 flex items-center justify-center ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+        <p className="text-xl font-bold animate-pulse">Loading Article...</p>
+      </div>
+    );
+  }
 
   if (!article) {
-    return <Navigate to="/news" />;
+    return (
+      <div className="pt-32 pb-24 max-w-7xl mx-auto px-6">
+        <p className="text-zinc-500">Article not found.</p>
+        <Link to="/news" className="text-[#EFDC43] font-bold mt-4 inline-block">← Back to News</Link>
+      </div>
+    );
   }
 
   return (
     <div className="pt-32 pb-24 max-w-7xl mx-auto px-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* Left Column: Article Content */}
+
+        {/* ── Main Content ── */}
         <div className="lg:col-span-8">
-          <Link 
-            to="/news" 
-            className={`flex items-center gap-2 text-sm font-bold uppercase tracking-widest mb-8 transition-colors ${isDarkMode ? 'text-zinc-500 hover:text-[#f5a623]' : 'text-zinc-400 hover:text-[#f5a623]'}`}
+
+          {/* Back Button */}
+          <Link
+            to="/news"
+            className="inline-flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-[#EFDC43] uppercase tracking-widest mb-8 transition-colors"
           >
-            <ArrowLeft size={16} /> Back to Highlights
+            <ChevronLeft size={16} /> Back to News
           </Link>
 
-          <motion.article
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className={`w-full h-96 rounded-sm mb-12 ${article.color}`}></div>
-            
-            <span className="text-xs font-bold text-[#f5a623] uppercase tracking-widest mb-4 block">{article.date}</span>
-            <h1 className={`text-5xl font-black uppercase mb-8 leading-none tracking-tighter ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+          {/* Article Header */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <span className="text-[10px] font-bold text-[#EFDC43] uppercase tracking-widest">
+              {formatDate(article.date)}
+              {article.author && ` • ${article.author}`}
+            </span>
+            <h1 className={`text-3xl md:text-4xl font-black uppercase tracking-tight mt-2 mb-6 leading-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
               {article.title}
             </h1>
-            
-            <div className={`text-xl leading-relaxed space-y-6 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
-              <p className="font-bold text-2xl italic mb-8 border-l-4 border-[#f5a623] pl-6">
-                {article.excerpt}
+            <p className={`text-lg leading-relaxed mb-8 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+              {article.excerpt}
+            </p>
+          </motion.div>
+
+          {/* ── YouTube Embed ── */}
+          {article.videoUrl && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-10"
+            >
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
+                Match Video
               </p>
-              {article.content.split('\n').map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
+              <div className="relative w-full aspect-video rounded-sm overflow-hidden border border-white/10">
+                <iframe
+                  src={getEmbedUrl(article.videoUrl)}
+                  title={article.title}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Divider */}
+          <div className={`h-px w-full mb-10 ${isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`} />
+
+          {/* ── Comments Section ── */}
+          <div>
+            <div className="flex items-center gap-3 mb-8">
+              <MessageCircle size={20} className="text-[#EFDC43]" />
+              <h3 className={`text-xl font-bold uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                Comments ({comments.length})
+              </h3>
             </div>
-          </motion.article>
+
+            {/* Comment Form */}
+            <form onSubmit={handleComment} className="mb-10">
+              <div className="flex flex-col gap-4">
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={`w-full px-4 py-3 rounded-sm text-sm border outline-none focus:border-[#EFDC43] transition-colors ${isDarkMode ? 'bg-zinc-800 border-white/10 text-white placeholder:text-zinc-500' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                />
+                <textarea
+                  placeholder="Write a comment..."
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  rows={3}
+                  className={`w-full px-4 py-3 rounded-sm text-sm border outline-none focus:border-[#EFDC43] transition-colors resize-none ${isDarkMode ? 'bg-zinc-800 border-white/10 text-white placeholder:text-zinc-500' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                />
+                <button
+                  type="submit"
+                  className="self-end flex items-center gap-2 bg-[#EFDC43] text-black text-sm font-bold uppercase tracking-widest px-6 py-3 rounded-sm hover:opacity-90 transition-opacity"
+                >
+                  Post Comment <Send size={14} />
+                </button>
+              </div>
+            </form>
+
+            {/* Comment List */}
+            {comments.length === 0 ? (
+              <p className="text-zinc-500 text-sm">No comments yet. Be the first!</p>
+            ) : (
+              <div className="space-y-4">
+                {comments.map((c) => (
+                  <motion.div
+                    key={c.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-5 rounded-sm border ${isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200'}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                        {c.name}
+                      </span>
+                      <span className="text-xs text-zinc-500">{c.timestamp}</span>
+                    </div>
+                    <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                      {c.text}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right Column: Sidebar */}
+        {/* ── Sidebar ── */}
         <div className="lg:col-span-4">
           <Sidebar isDarkMode={isDarkMode} />
         </div>
