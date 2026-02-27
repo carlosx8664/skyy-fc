@@ -19,9 +19,10 @@ interface Article {
   excerpt: string;
   author?: string;
   videoUrl?: string;
+  image?: string;
+  showCoverImage?: boolean;
 }
 
-// Converts any YouTube URL format to an embed URL
 const getEmbedUrl = (url: string): string => {
   try {
     const urlObj = new URL(url);
@@ -61,7 +62,9 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
         date,
         excerpt,
         author,
-        videoUrl
+        videoUrl,
+        showCoverImage,
+        "image": image.asset->url
       }`, { id })
       .then((data: Article) => {
         setArticle(data);
@@ -93,7 +96,7 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   if (loading) {
     return (
-      <div className={`pt-32 pb-24 flex items-center justify-center ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+      <div className={`pt-6 pb-24 flex items-center justify-center ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
         <p className="text-xl font-bold animate-pulse">Loading Article...</p>
       </div>
     );
@@ -101,7 +104,7 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   if (!article) {
     return (
-      <div className="pt-32 pb-24 max-w-7xl mx-auto px-6">
+      <div className="pt-6 pb-24 max-w-7xl mx-auto px-6">
         <p className="text-zinc-500">Article not found.</p>
         <Link to="/news" className="text-[#EFDC43] font-bold mt-4 inline-block">← Back to News</Link>
       </div>
@@ -109,7 +112,7 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
   }
 
   return (
-    <div className="pt-32 pb-24 max-w-7xl mx-auto px-6">
+    <div className="pt-6 pb-24 max-w-7xl mx-auto px-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
         {/* ── Main Content ── */}
@@ -118,21 +121,54 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
           {/* Back Button */}
           <Link
             to="/news"
-            className="inline-flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-[#EFDC43] uppercase tracking-widest mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-bold text-zinc-500
+              hover:text-[#EFDC43] uppercase tracking-widest mb-8 transition-colors"
           >
             <ChevronLeft size={16} /> Back to News
           </Link>
 
-          {/* Article Header */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          {/* ── Date + Title ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
             <span className="text-[10px] font-bold text-[#EFDC43] uppercase tracking-widest">
               {formatDate(article.date)}
               {article.author && ` • ${article.author}`}
             </span>
-            <h1 className={`text-3xl md:text-4xl font-black uppercase tracking-tight mt-2 mb-6 leading-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+            <h1 className={`text-3xl md:text-4xl font-black uppercase tracking-tight
+              mt-2 leading-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
               {article.title}
             </h1>
-            <p className={`text-lg leading-relaxed mb-8 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+          </motion.div>
+
+          {/* ── Cover Image — before excerpt ── */}
+          {article.showCoverImage && article.image && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="mb-8"
+            >
+              <img
+                src={article.image}
+                alt={article.title}
+                className={`w-full max-h-[500px] object-cover rounded-sm border
+                  ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
+              />
+            </motion.div>
+          )}
+
+          {/* ── Excerpt ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="mb-10"
+          >
+            <p className={`text-lg leading-relaxed
+              ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
               {article.excerpt}
             </p>
           </motion.div>
@@ -167,7 +203,8 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
           <div>
             <div className="flex items-center gap-3 mb-8">
               <MessageCircle size={20} className="text-[#EFDC43]" />
-              <h3 className={`text-xl font-bold uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+              <h3 className={`text-xl font-bold uppercase tracking-tight
+                ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                 Comments ({comments.length})
               </h3>
             </div>
@@ -180,18 +217,28 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
                   placeholder="Your name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-sm text-sm border outline-none focus:border-[#EFDC43] transition-colors ${isDarkMode ? 'bg-zinc-800 border-white/10 text-white placeholder:text-zinc-500' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                  className={`w-full px-4 py-3 rounded-sm text-sm border outline-none
+                    focus:border-[#EFDC43] transition-colors
+                    ${isDarkMode
+                      ? 'bg-zinc-800 border-white/10 text-white placeholder:text-zinc-500'
+                      : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
                 />
                 <textarea
                   placeholder="Write a comment..."
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   rows={3}
-                  className={`w-full px-4 py-3 rounded-sm text-sm border outline-none focus:border-[#EFDC43] transition-colors resize-none ${isDarkMode ? 'bg-zinc-800 border-white/10 text-white placeholder:text-zinc-500' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
+                  className={`w-full px-4 py-3 rounded-sm text-sm border outline-none
+                    focus:border-[#EFDC43] transition-colors resize-none
+                    ${isDarkMode
+                      ? 'bg-zinc-800 border-white/10 text-white placeholder:text-zinc-500'
+                      : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400'}`}
                 />
                 <button
                   type="submit"
-                  className="self-end flex items-center gap-2 bg-[#EFDC43] text-black text-sm font-bold uppercase tracking-widest px-6 py-3 rounded-sm hover:opacity-90 transition-opacity"
+                  className="self-end flex items-center gap-2 bg-[#EFDC43] text-black
+                    text-sm font-bold uppercase tracking-widest px-6 py-3 rounded-sm
+                    hover:opacity-90 transition-opacity"
                 >
                   Post Comment <Send size={14} />
                 </button>
@@ -208,15 +255,18 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
                     key={c.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`p-5 rounded-sm border ${isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200'}`}
+                    className={`p-5 rounded-sm border
+                      ${isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200'}`}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                      <span className={`text-sm font-bold
+                        ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                         {c.name}
                       </span>
                       <span className="text-xs text-zinc-500">{c.timestamp}</span>
                     </div>
-                    <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    <p className={`text-sm leading-relaxed
+                      ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
                       {c.text}
                     </p>
                   </motion.div>

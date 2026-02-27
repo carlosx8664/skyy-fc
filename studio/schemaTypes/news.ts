@@ -11,6 +11,13 @@ export default {
       type: 'image',
       options: { hotspot: true },
     },
+    {
+      name: 'showCoverImage',
+      title: 'Show Cover Image Inside Article',
+      type: 'boolean',
+      description: 'Toggle ON to display the cover photo at the top of the article body.',
+      initialValue: true,
+    },
     { name: 'excerpt', title: 'Excerpt',      type: 'text' },
     {
       name: 'body',

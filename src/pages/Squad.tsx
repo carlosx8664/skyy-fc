@@ -1,34 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X } from 'lucide-react';
 import { client } from '../lib/sanityClient';
+import imageUrlBuilder from '@sanity/image-url';
+
+const builder = imageUrlBuilder(client);
+const urlFor = (source: any) => builder.image(source).width(600).url();
 
 interface Player {
   _id: string;
   name: string;
   number: number;
   position: string;
-  nationality?: string;
-  age?: number;
-  photo?: string;
+  role: string;
+  foot: string;
+  isCaptain: boolean;
+  debut: string;
+  home: string;
+  tags: string[];
+  bio: string;
+  category: 'goalkeeper' | 'defender' | 'midfielder' | 'forward';
+  image: any;
+  stats: Record<string, string | number>;
 }
+
+const FILTERS = [
+  { label: 'All',         value: 'all' },
+  { label: 'Goalkeepers', value: 'goalkeeper' },
+  { label: 'Defenders',   value: 'defender' },
+  { label: 'Midfielders', value: 'midfielder' },
+  { label: 'Forwards',    value: 'forward' },
+];
 
 export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
-  const playersPerPage = 6;
+  const [filter, setFilter]   = useState('all');
+  const [selected, setSelected] = useState<Player | null>(null);
 
   useEffect(() => {
     client
       .fetch(`*[_type == "player"] | order(number asc) {
-        _id,
-        name,
-        number,
-        position,
-        nationality,
-        age,
-        "photo": photo.asset->url
+        _id, name, number, position, role, foot,
+        isCaptain, debut, home, tags, bio, category, image, stats
       }`)
       .then((data: Player[]) => {
         setPlayers(data);
@@ -37,98 +51,257 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
       .catch(() => setLoading(false));
   }, []);
 
-  const totalPages = Math.ceil(players.length / playersPerPage);
-  const currentPlayers = players.slice(
-    currentPage * playersPerPage,
-    (currentPage + 1) * playersPerPage
-  );
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelected(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
-  // Helper: get initials from name
-  const getInitials = (name: string) =>
-    name.split(' ').map((n) => n[0]).join('').toUpperCase();
+  const filtered = filter === 'all'
+    ? players
+    : players.filter(p => p.category === filter);
 
   if (loading) {
     return (
-      <div className={`pt-32 pb-24 flex items-center justify-center ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+      <div className={`pt-6 pb-24 flex items-center justify-center
+        ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
         <p className="text-xl font-bold animate-pulse">Loading Squad...</p>
       </div>
     );
   }
 
   return (
-    <div className="pt-32 pb-24 max-w-7xl mx-auto px-6">
-      <div className="flex items-center justify-between mb-12">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
-            <Users size={24} />
-          </div>
-          <h2 className={`text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-            The Squad
+    <div className={`pt-6 pb-24 ${isDarkMode ? 'bg-zinc-950' : 'bg-zinc-50'}`}>
+
+      {/* ── Header ── */}
+      <div className="max-w-7xl mx-auto px-6 mb-10
+        flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h2 className={`text-5xl font-black tracking-tight
+            ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+            Our Squad
           </h2>
+          <p className="text-xs font-bold tracking-[0.25em] uppercase mt-2"
+            style={{ color: '#EFDC43' }}>
+            Pick a name. See the story.
+          </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-            disabled={currentPage === 0}
-            className={`p-2 rounded-full transition-all ${isDarkMode ? 'bg-white/5 text-white disabled:opacity-20' : 'bg-black/5 text-zinc-900 disabled:opacity-20'}`}
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <span className={`text-sm font-bold uppercase tracking-widest ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-            Page {currentPage + 1} of {totalPages || 1}
-          </span>
-          <button
-            onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-            disabled={currentPage === totalPages - 1 || totalPages === 0}
-            className={`p-2 rounded-full transition-all ${isDarkMode ? 'bg-white/5 text-white disabled:opacity-20' : 'bg-black/5 text-zinc-900 disabled:opacity-20'}`}
-          >
-            <ChevronRight size={24} />
-          </button>
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map(f => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={`px-4 py-2 rounded-full text-xs font-bold border transition
+                ${filter === f.value
+                  ? 'text-black border-[#EFDC43]'
+                  : isDarkMode
+                    ? 'border-white/20 text-white hover:border-white/50'
+                    : 'border-zinc-300 text-zinc-700 hover:border-zinc-500'}`}
+              style={filter === f.value ? { backgroundColor: '#EFDC43' } : {}}>
+              {f.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-        <AnimatePresence mode="wait">
-          {currentPlayers.map((player) => (
-            <motion.div
-              key={player._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              whileHover={{ y: -10 }}
-              className="group"
-            >
-              <div className={`relative aspect-[3/4] rounded-sm overflow-hidden mb-4 border flex items-center justify-center ${isDarkMode ? 'bg-zinc-800 border-white/5' : 'bg-zinc-100 border-zinc-200'}`}>
-                {/* Real photo if available, otherwise initials placeholder */}
-                {player.photo ? (
-                  <img
-                    src={player.photo}
-                    alt={player.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-6xl font-black opacity-10 group-hover:opacity-20 transition-opacity">
-                    {getInitials(player.name)}
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60"></div>
-                <div className="absolute bottom-4 left-4">
-                  <span className="text-4xl font-black text-[#EFDC43] opacity-50 group-hover:opacity-100 transition-opacity">
-                    #{player.number}
+      {/* ── Responsive Player Grid ── */}
+      <div className="max-w-7xl mx-auto px-6">
+        <AnimatePresence mode="popLayout">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+            {filtered.map((player, i) => (
+              <motion.div
+                key={player._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: i * 0.03 }}
+                onClick={() => setSelected(player)}
+                className={`rounded-2xl overflow-hidden border cursor-pointer
+                  transition hover:scale-[1.03] hover:border-[#EFDC43]
+                  ${isDarkMode
+                    ? 'bg-zinc-950 border-white/10'
+                    : 'bg-white border-zinc-200'}`}>
+
+                <div className="relative h-64 overflow-hidden bg-zinc-950">
+                  {player.isCaptain && (
+                    <div className="absolute top-3 left-3 z-10 w-7 h-7 rounded-sm
+                      flex items-center justify-center text-[10px] font-black text-black"
+                      style={{ backgroundColor: '#EFDC43' }}>
+                      C
+                    </div>
+                  )}
+
+                  <span className="absolute top-0 right-2 text-[100px] font-black
+                    leading-none select-none z-0"
+                    style={{ color: '#EFDC43', opacity: 0.12 }}>
+                    {player.number}
                   </span>
+
+                  {player.image ? (
+                    <img
+                      src={urlFor(player.image)}
+                      alt={player.name}
+                      className="absolute inset-0 w-full h-full object-cover object-top z-10"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <span className="text-5xl font-black opacity-20 text-white">
+                        {player.name.split(' ').map(n => n[0]).join('')}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="absolute inset-x-0 bottom-0 h-16 z-20
+                    bg-gradient-to-t from-zinc-950 to-transparent" />
+                </div>
+
+                <div className={`p-4 ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
+                  <p className={`font-black text-sm leading-tight
+                    ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                    {player.name}
+                  </p>
+                  <p className={`text-[11px] mt-1 uppercase tracking-widest
+                    ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                    {player.position}
+                  </p>
+                </div>
+
+              </motion.div>
+            ))}
+          </div>
+        </AnimatePresence>
+
+        {filtered.length === 0 && (
+          <p className={`py-20 text-sm opacity-40 text-center
+            ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+            No players in this category yet.
+          </p>
+        )}
+      </div>
+
+      {/* ── Player Profile Modal ── */}
+      <AnimatePresence>
+        {selected && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setSelected(null)}>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 25 }}
+              onClick={e => e.stopPropagation()}
+              className={`relative w-full max-w-3xl rounded-2xl overflow-hidden
+                ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`}>
+
+              <button
+                onClick={() => setSelected(null)}
+                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full
+                  bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+                <X size={16} className="text-white" />
+              </button>
+
+              <div className="flex flex-col md:flex-row">
+
+                <div className="relative md:w-72 h-72 md:h-auto flex-shrink-0
+                  overflow-hidden bg-zinc-950">
+
+                  <span className="absolute top-2 right-2 font-black select-none z-0 leading-none"
+                    style={{ color: '#EFDC43', opacity: 0.15, fontSize: '10rem' }}>
+                    {selected.number}
+                  </span>
+
+                  {selected.image ? (
+                    <img
+                      src={urlFor(selected.image)}
+                      alt={selected.name}
+                      className="absolute inset-0 w-full h-full object-cover object-top z-10"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <span className="text-6xl font-black opacity-20"
+                        style={{ color: '#EFDC43' }}>
+                        {selected.number}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 p-6 md:p-8 overflow-y-auto max-h-[80vh] md:max-h-none">
+
+                  <span className={`text-xs font-bold tracking-[0.3em] uppercase
+                    opacity-40 block mb-2
+                    ${isDarkMode ? 'text-white' : 'text-black'}`}>
+                    First Team
+                  </span>
+
+                  <h2 className={`text-4xl font-black leading-tight mb-1
+                    ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                    {selected.name}
+                  </h2>
+
+                  <p className="text-base font-semibold mb-4"
+                    style={{ color: '#EFDC43' }}>
+                    {selected.role}
+                  </p>
+
+                  <p className={`text-sm leading-relaxed mb-6
+                    ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    {selected.bio}
+                  </p>
+
+                  <div className={`grid grid-cols-2 gap-px rounded-xl overflow-hidden border mb-5
+                    ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}>
+                    {[
+                      { label: 'Debut',         value: selected.debut },
+                      { label: 'Hometown',       value: selected.home },
+                      { label: 'Preferred Foot', value: selected.foot },
+                      { label: 'Position',       value: selected.position },
+                    ].map(({ label, value }) => (
+                      <div key={label}
+                        className={`flex justify-between items-center px-4 py-3
+                          ${isDarkMode ? 'bg-white/5' : 'bg-zinc-50'}`}>
+                        <span className={`text-xs font-bold uppercase tracking-wider
+                          ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                          {label}:
+                        </span>
+                        <span className={`text-xs font-bold
+                          ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                          {value ?? '—'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {selected.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {selected.tags.map(tag => (
+                        <span key={tag}
+                          className={`text-[11px] font-bold uppercase tracking-wider
+                            px-3 py-1 rounded-full border
+                            ${isDarkMode
+                              ? 'border-white/10 text-zinc-400'
+                              : 'border-zinc-200 text-zinc-500'}`}>
+                          • {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                 </div>
               </div>
-              <h3 className={`text-lg font-bold uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-                {player.name}
-              </h3>
-              <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">
-                {player.position}
-              </p>
             </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };

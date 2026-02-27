@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Newspaper } from 'lucide-react';
+import { ArrowRight, Newspaper, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { client } from '../lib/sanityClient';
 import { Sidebar } from '../components/Sidebar';
+import { MatchPanel } from '../components/MatchPanel';
+import { PartnersBar } from '../components/PartnersBar';
+import { Store } from '../components/Store';
 
-// ── Drop your 3 hero images into src/assets/ and update these imports ──
 import hero1 from '../assets/hero1.jpg';
 import hero2 from '../assets/hero2.jpg';
 import hero3 from '../assets/hero3.jpg';
 
 const HERO_IMAGES = [hero1, hero2, hero3];
 const SLIDE_INTERVAL = 5000;
+const NEWS_PER_PAGE = 4;
 
 interface ClubInfo {
   tagline: string;
@@ -21,18 +24,17 @@ interface NewsArticle {
   _id: string;
   title: string;
   date: string;
-  excerpt: string;
   image?: string;
 }
 
 export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
-  const [clubInfo, setClubInfo] = useState<ClubInfo>({ tagline: 'Division One League' });
-  const [news, setNews] = useState<NewsArticle[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [clubInfo, setClubInfo]         = useState<ClubInfo>({ tagline: 'Division One League' });
+  const [news, setNews]                 = useState<NewsArticle[]>([]);
+  const [loading, setLoading]           = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [newsPage, setNewsPage]         = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Auto-advance carousel
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % HERO_IMAGES.length);
@@ -44,11 +46,10 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
     setClubInfo({ tagline: 'No Size!' });
 
     client
-      .fetch(`*[_type == "news"] | order(date desc)[0...4] {
+      .fetch(`*[_type == "news"] | order(date desc) {
         _id,
         title,
         date,
-        excerpt,
         "image": image.asset->url
       }`)
       .then((data: NewsArticle[]) => {
@@ -64,6 +65,14 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
       month: 'short',
     }).toUpperCase();
 
+  const totalPages = Math.ceil(news.length / NEWS_PER_PAGE);
+  const pagedNews  = news.slice(newsPage * NEWS_PER_PAGE, (newsPage + 1) * NEWS_PER_PAGE);
+
+  const goToPage = (p: number) => {
+    setNewsPage(p);
+    document.getElementById('news-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   if (loading && news.length === 0) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
@@ -77,10 +86,9 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
   return (
     <div className="pt-20">
 
-      {/* ── Hero Section ── */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* ── Hero Section with MatchPanel overlay ── */}
+      <section className="relative min-h-screen flex items-center overflow-hidden">
 
-        {/* Crossfading background images */}
         <AnimatePresence>
           <motion.div
             key={currentSlide}
@@ -98,10 +106,8 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
           />
         </AnimatePresence>
 
-        {/* Dark overlay to make text readable */}
-        <div className="absolute inset-0 z-10 bg-black/50" />
+        <div className="absolute inset-0 z-10 bg-black/60" />
 
-        {/* Bottom gradient — blends into page background */}
         <div
           className="absolute inset-x-0 bottom-0 z-20 h-64 pointer-events-none"
           style={{
@@ -111,7 +117,6 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
           }}
         />
 
-        {/* Slide indicators */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-2">
           {HERO_IMAGES.map((_, i) => (
             <button
@@ -124,79 +129,172 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
           ))}
         </div>
 
-        {/* Hero text */}
-        <div className="relative z-30 text-center px-6 max-w-4xl">
+        <div className="relative z-30 w-full max-w-7xl mx-auto px-6 py-32
+          flex flex-col lg:flex-row items-center gap-12">
+
           <motion.div
+            className="flex-1"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase mb-4 leading-none text-white drop-shadow-lg">
-              SKYY <span className="text-[#EFDC43]">Football Club</span>
+            <span className="text-xs font-bold tracking-[0.3em] uppercase mb-4 block"
+              style={{ color: '#EFDC43' }}>
+              SKYY FC 2026
+            </span>
+
+            <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase
+              leading-none text-white drop-shadow-lg mb-6">
+              The Season<br />
+              <span style={{ color: '#EFDC43' }}>In Motion</span>
             </h1>
-            <p className="text-xl font-light tracking-wide italic text-white/80 drop-shadow">
-              "{clubInfo.tagline}"
-            </p>
+
+            <p className="text-lg text-white/70 mb-2">Results. Momentum. Moments.</p>
+            <p className="text-sm text-white/50 mb-10">"{clubInfo.tagline}"</p>
+
+            <ul className="flex gap-10">
+              {[
+                { value: '7',  label: 'Wins' },
+                { value: '28', label: 'Goals' },
+                { value: '32', label: 'Players' },
+              ].map(({ value, label }) => (
+                <li key={label} className="flex flex-col">
+                  <strong className="text-4xl font-black text-white">{value}</strong>
+                  <span className="text-xs uppercase tracking-widest text-white/50">{label}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          <motion.div
+            className="w-full lg:w-[420px] flex-shrink-0"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <MatchPanel isDarkMode={isDarkMode} />
           </motion.div>
         </div>
       </section>
 
+      {/* ── Partners Bar ── */}
+      <PartnersBar isDarkMode={isDarkMode} />
+
       {/* ── Main Content Grid ── */}
       <main className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
 
-        {/* Left Column: Latest Highlights */}
-        <div className="lg:col-span-8 space-y-12">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
-              <Newspaper size={24} />
+        {/* Left Column: Latest News */}
+        <div id="news-section" className="lg:col-span-8 space-y-12">
+
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
+                <Newspaper size={24} />
+              </div>
+              <h2 className={`text-3xl font-bold tracking-tight uppercase
+                ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                Latest News
+              </h2>
             </div>
-            <h2 className={`text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-              Latest Highlights
-            </h2>
+            {totalPages > 1 && (
+              <span className={`text-xs font-bold uppercase tracking-widest
+                ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                Page {newsPage + 1} of {totalPages}
+              </span>
+            )}
           </div>
 
+          {/* Articles — image + date + title only */}
           <div className="space-y-12">
-            {news.map((article) => (
+            {pagedNews.map((article) => (
               <motion.article
                 key={article._id}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className={`flex flex-col md:flex-row gap-8 pb-12 border-b last:border-0 group ${isDarkMode ? 'border-white/5' : 'border-zinc-200'}`}
+                className={`flex flex-col md:flex-row gap-8 pb-12 border-b last:border-0 group
+                  ${isDarkMode ? 'border-white/5' : 'border-zinc-200'}`}
               >
-                <div className={`w-full md:w-64 h-48 flex-shrink-0 rounded-sm overflow-hidden border relative ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}>
+                {/* Thumbnail */}
+                <Link
+                  to={`/news/${article._id}`}
+                  className={`w-full md:w-64 h-48 flex-shrink-0 rounded-sm overflow-hidden border relative
+                    ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
+                >
                   {article.image ? (
                     <img
                       src={article.image}
                       alt={article.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-cover
+                        transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-900" />
                   )}
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">
+                </Link>
+
+                {/* Date + Title + Continue */}
+                <div className="flex flex-col justify-center gap-2">
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
                     {formatDate(article.date)}
                   </p>
                   <Link to={`/news/${article._id}`}>
-                    <h3 className={`text-3xl font-black uppercase tracking-tight mb-4 group-hover:text-[#EFDC43] transition-colors leading-none ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                    <h3 className={`text-3xl font-black uppercase tracking-tight leading-none
+                      group-hover:text-[#EFDC43] transition-colors
+                      ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                       {article.title}
                     </h3>
                   </Link>
-                  <p className={`text-sm leading-relaxed mb-6 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                    {article.excerpt}
-                  </p>
                   <Link
                     to={`/news/${article._id}`}
-                    className="text-sm font-bold text-[#EFDC43] hover:text-[#EFDC43]/80 transition-colors flex items-center gap-1"
+                    className="text-sm font-bold text-[#EFDC43] hover:opacity-80
+                      transition-opacity flex items-center gap-1 mt-2"
                   >
-                    Watch Now <ArrowRight size={14} />
+                    Continue <ArrowRight size={14} />
                   </Link>
                 </div>
               </motion.article>
             ))}
           </div>
+
+          {/* ── Pagination ── */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-4">
+              <button
+                onClick={() => goToPage(newsPage - 1)}
+                disabled={newsPage === 0}
+                className={`p-2 rounded-full transition-all
+                  ${isDarkMode ? 'bg-white/5 text-white disabled:opacity-20' : 'bg-black/5 text-zinc-900 disabled:opacity-20'}`}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goToPage(i)}
+                  className={`w-8 h-8 rounded-full text-xs font-black transition-all
+                    ${i === newsPage
+                      ? 'bg-[#EFDC43] text-black'
+                      : isDarkMode
+                        ? 'bg-white/5 text-zinc-400 hover:bg-white/10'
+                        : 'bg-black/5 text-zinc-500 hover:bg-black/10'}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => goToPage(newsPage + 1)}
+                disabled={newsPage === totalPages - 1}
+                className={`p-2 rounded-full transition-all
+                  ${isDarkMode ? 'bg-white/5 text-white disabled:opacity-20' : 'bg-black/5 text-zinc-900 disabled:opacity-20'}`}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
+
         </div>
 
         {/* Right Column: Sidebar */}
@@ -204,6 +302,10 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
           <Sidebar isDarkMode={isDarkMode} />
         </div>
       </main>
+
+      {/* ── Store ── */}
+      <Store isDarkMode={isDarkMode} />
+
     </div>
   );
 };

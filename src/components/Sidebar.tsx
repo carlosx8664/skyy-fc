@@ -22,15 +22,6 @@ interface LatestResult {
   outcome: 'win' | 'draw' | 'loss';
 }
 
-interface NextFixture {
-  _id: string;
-  homeTeam: Team;
-  awayTeam: Team;
-  date: string;
-  kickOff: string;
-  venue: string;
-}
-
 interface LeagueTable {
   _id: string;
   position: number;
@@ -65,7 +56,7 @@ const MONTH_NAMES = [
 ];
 
 const outcomeColor = (outcome: string) => {
-  if (outcome === 'win') return 'bg-emerald-500';
+  if (outcome === 'win')  return 'bg-emerald-500';
   if (outcome === 'draw') return 'bg-amber-500';
   if (outcome === 'loss') return 'bg-rose-500';
   return 'bg-zinc-500';
@@ -73,9 +64,8 @@ const outcomeColor = (outcome: string) => {
 
 export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [latestResult, setLatestResult] = useState<LatestResult | null>(null);
-  const [nextFixture, setNextFixture] = useState<NextFixture | null>(null);
-  const [standings, setStandings] = useState<LeagueTable[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [standings, setStandings]       = useState<LeagueTable[]>([]);
+  const [loading, setLoading]           = useState(true);
   const [standingsPage, setStandingsPage] = useState(0);
 
   const today = new Date();
@@ -94,17 +84,6 @@ export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
       )
       .then((data) => { if (data) setLatestResult(data); })
       .catch((err) => console.error('❌ Result error:', err));
-
-    client
-      .fetch<NextFixture | null>(
-        `*[_type == "fixture"] | order(date asc)[0] {
-          _id, date, kickOff, venue,
-          homeTeam-> { name, shortName, logo },
-          awayTeam-> { name, shortName, logo }
-        }`
-      )
-      .then((data) => { if (data) setNextFixture(data); })
-      .catch((err) => console.error('❌ Fixture error:', err));
 
     client
       .fetch<LeagueTable[]>(
@@ -127,41 +106,9 @@ export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
     }).toUpperCase();
   };
 
-  const MatchCard = ({
-    date, homeTeam, awayTeam, center, footer,
-  }: {
-    date: string;
-    homeTeam: Team;
-    awayTeam: Team;
-    center: React.ReactNode;
-    footer: React.ReactNode;
-  }) => (
-    <>
-      <p className="text-[10px] font-bold text-zinc-500 uppercase mb-4">{date}</p>
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="flex-1 flex flex-col items-center">
-          <TeamLogo logo={homeTeam.logo} fallback={homeTeam.name} isDarkMode={isDarkMode} />
-          <span className="text-xs uppercase font-bold text-zinc-400 text-center leading-tight">
-            {homeTeam.shortName ?? homeTeam.name}
-          </span>
-        </div>
-        <div className="flex flex-col items-center">
-          {center}
-        </div>
-        <div className="flex-1 flex flex-col items-center">
-          <TeamLogo logo={awayTeam.logo} fallback={awayTeam.name} isDarkMode={isDarkMode} />
-          <span className="text-xs uppercase font-bold text-zinc-400 text-center leading-tight">
-            {awayTeam.shortName ?? awayTeam.name}
-          </span>
-        </div>
-      </div>
-      {footer}
-    </>
-  );
-
-  const calYear = calendarDate.getFullYear();
+  const calYear  = calendarDate.getFullYear();
   const calMonth = calendarDate.getMonth();
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const daysInMonth   = new Date(calYear, calMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay();
   const prevMonth = () => setCalendarDate(new Date(calYear, calMonth - 1, 1));
   const nextMonth = () => setCalendarDate(new Date(calYear, calMonth + 1, 1));
@@ -169,7 +116,7 @@ export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
     day === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
 
   const pagedStandings = standings.slice(standingsPage * 8, standingsPage * 8 + 8);
-  const totalPages = Math.ceil(standings.length / 8);
+  const totalPages     = Math.ceil(standings.length / 8);
 
   return (
     <aside className="space-y-8">
@@ -179,102 +126,41 @@ export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
         <SidebarHeader title="Latest Result" />
         <div className="p-6 text-center">
           {latestResult ? (
-            <MatchCard
-              date={formatDate(latestResult.date)}
-              homeTeam={latestResult.homeTeam}
-              awayTeam={latestResult.awayTeam}
-              center={
+            <>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase mb-4">
+                {formatDate(latestResult.date)}
+              </p>
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="flex-1 flex flex-col items-center">
+                  <TeamLogo logo={latestResult.homeTeam.logo} fallback={latestResult.homeTeam.name} isDarkMode={isDarkMode} />
+                  <span className="text-xs uppercase font-bold text-zinc-400 text-center leading-tight">
+                    {latestResult.homeTeam.shortName ?? latestResult.homeTeam.name}
+                  </span>
+                </div>
                 <span className={`text-3xl font-black ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                   {latestResult.homeScore} - {latestResult.awayScore}
                 </span>
-              }
-              footer={
-                <div className="flex items-center justify-center gap-3">
-                  <p className="text-xs font-bold text-[#EFDC43] uppercase tracking-widest">
-                    Ghana Division One
-                  </p>
-                  {latestResult.outcome && (
-                    <span className={`${outcomeColor(latestResult.outcome)} text-white text-[10px] font-black px-2 py-0.5 rounded-sm`}>
-                      {latestResult.outcome === 'win' ? 'W' : latestResult.outcome === 'draw' ? 'D' : 'L'}
-                    </span>
-                  )}
+                <div className="flex-1 flex flex-col items-center">
+                  <TeamLogo logo={latestResult.awayTeam.logo} fallback={latestResult.awayTeam.name} isDarkMode={isDarkMode} />
+                  <span className="text-xs uppercase font-bold text-zinc-400 text-center leading-tight">
+                    {latestResult.awayTeam.shortName ?? latestResult.awayTeam.name}
+                  </span>
                 </div>
-              }
-            />
+              </div>
+              <div className="flex items-center justify-center gap-3">
+                <p className="text-xs font-bold text-[#EFDC43] uppercase tracking-widest">
+                  Ghana Division One
+                </p>
+                {latestResult.outcome && (
+                  <span className={`${outcomeColor(latestResult.outcome)} text-white text-[10px] font-black px-2 py-0.5 rounded-sm`}>
+                    {latestResult.outcome === 'win' ? 'W' : latestResult.outcome === 'draw' ? 'D' : 'L'}
+                  </span>
+                )}
+              </div>
+            </>
           ) : (
             <p className="text-zinc-500 text-sm">No recent results</p>
           )}
-        </div>
-      </div>
-
-      {/* ── Next Match ── */}
-      <div className={`border rounded-sm overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'}`}>
-        <SidebarHeader title="Next Match" />
-        <div className="p-6 text-center">
-          {nextFixture ? (
-            <MatchCard
-              date={formatDate(nextFixture.date)}
-              homeTeam={nextFixture.homeTeam}
-              awayTeam={nextFixture.awayTeam}
-              center={
-                <div className="flex flex-col items-center gap-1">
-                  <span className={`text-lg font-black ${isDarkMode ? 'text-white' : 'text-zinc-400'}`}>VS</span>
-                  <span className="text-xl font-black text-[#EFDC43]">
-                    {nextFixture.kickOff ?? '15:00'}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 uppercase font-bold">KO</span>
-                </div>
-              }
-              footer={
-                <div className="flex flex-col items-center gap-1">
-                  <p className="text-xs font-bold text-[#EFDC43] uppercase tracking-widest">
-                    Ghana Division One
-                  </p>
-                  {nextFixture.venue && (
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
-                      📍 {nextFixture.venue}
-                    </p>
-                  )}
-                </div>
-              }
-            />
-          ) : (
-            <p className="text-zinc-500 text-sm">Fixture schedule TBD</p>
-          )}
-        </div>
-      </div>
-
-      {/* ── Calendar ── */}
-      <div className={`border rounded-sm overflow-hidden shadow-xl ${isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200'}`}>
-        <SidebarHeader title={`${MONTH_NAMES[calMonth]} ${calYear}`} />
-        <div className="p-4">
-          <div className={`grid grid-cols-7 gap-1 text-center mb-4 border-b pb-2 ${isDarkMode ? 'border-white/5' : 'border-zinc-100'}`}>
-            {['S','M','T','W','T','F','S'].map((d, i) => (
-              <span key={i} className="text-[10px] font-black text-zinc-400">{d}</span>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1 text-center">
-            {Array.from({ length: firstDayOfWeek }).map((_, i) => <span key={`e-${i}`} />)}
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => (
-              <span key={d} className={`text-xs py-2 rounded-sm transition-colors ${
-                isToday(d)
-                  ? 'bg-[#EFDC43] text-black font-black'
-                  : isDarkMode ? 'text-zinc-300 hover:bg-white/5' : 'text-zinc-600 hover:bg-black/5'
-              }`}>
-                {d}
-              </span>
-            ))}
-          </div>
-          <div className={`flex justify-between mt-6 pt-4 border-t text-[10px] uppercase font-black text-zinc-500 ${isDarkMode ? 'border-white/5' : 'border-zinc-100'}`}>
-            <span onClick={prevMonth} className="flex items-center gap-1 cursor-pointer hover:text-[#EFDC43] transition-colors">
-              <ChevronLeft size={12} />
-              {MONTH_NAMES[calMonth === 0 ? 11 : calMonth - 1]?.slice(0, 3)}
-            </span>
-            <span onClick={nextMonth} className="flex items-center gap-1 cursor-pointer hover:text-[#EFDC43] transition-colors">
-              {MONTH_NAMES[calMonth === 11 ? 0 : calMonth + 1]?.slice(0, 3)}
-              <ChevronRight size={12} />
-            </span>
-          </div>
         </div>
       </div>
 
@@ -350,6 +236,40 @@ export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
               )}
             </>
           )}
+        </div>
+      </div>
+
+      {/* ── Calendar ── */}
+      <div className={`border rounded-sm overflow-hidden shadow-xl ${isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200'}`}>
+        <SidebarHeader title={`${MONTH_NAMES[calMonth]} ${calYear}`} />
+        <div className="p-4">
+          <div className={`grid grid-cols-7 gap-1 text-center mb-4 border-b pb-2 ${isDarkMode ? 'border-white/5' : 'border-zinc-100'}`}>
+            {['S','M','T','W','T','F','S'].map((d, i) => (
+              <span key={i} className="text-[10px] font-black text-zinc-400">{d}</span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {Array.from({ length: firstDayOfWeek }).map((_, i) => <span key={`e-${i}`} />)}
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => (
+              <span key={d} className={`text-xs py-2 rounded-sm transition-colors ${
+                isToday(d)
+                  ? 'bg-[#EFDC43] text-black font-black'
+                  : isDarkMode ? 'text-zinc-300 hover:bg-white/5' : 'text-zinc-600 hover:bg-black/5'
+              }`}>
+                {d}
+              </span>
+            ))}
+          </div>
+          <div className={`flex justify-between mt-6 pt-4 border-t text-[10px] uppercase font-black text-zinc-500 ${isDarkMode ? 'border-white/5' : 'border-zinc-100'}`}>
+            <span onClick={prevMonth} className="flex items-center gap-1 cursor-pointer hover:text-[#EFDC43] transition-colors">
+              <ChevronLeft size={12} />
+              {MONTH_NAMES[calMonth === 0 ? 11 : calMonth - 1]?.slice(0, 3)}
+            </span>
+            <span onClick={nextMonth} className="flex items-center gap-1 cursor-pointer hover:text-[#EFDC43] transition-colors">
+              {MONTH_NAMES[calMonth === 11 ? 0 : calMonth + 1]?.slice(0, 3)}
+              <ChevronRight size={12} />
+            </span>
+          </div>
         </div>
       </div>
 

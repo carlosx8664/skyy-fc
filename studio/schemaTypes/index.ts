@@ -1,17 +1,17 @@
 import player from './player'
-import fixture from './fixture'
-import result from './result'
+import liveStream from './liveStream';
 import team from './team'
 import news from './news'
 import leagueTable from './leagueTable'
-import gallery    from './gallery'
+import gallery from './gallery'
+import highlight from './highlight'
 
 export const schemaTypes = [
   player,
   team,
-  fixture,
-  result,
+  liveStream,
   news,
   leagueTable,
   gallery,
+  highlight,
 ]

@@ -89,7 +89,7 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   if (loading) {
     return (
-      <div className={`pt-32 pb-24 flex items-center justify-center ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+      <div className={`pt-6 pb-24 flex items-center justify-center ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
         <p className="text-xl font-bold animate-pulse">Loading Gallery...</p>
       </div>
     );
@@ -97,7 +97,7 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   if (!loading && albums.length === 0) {
     return (
-      <div className="pt-32 pb-24 max-w-7xl mx-auto px-6">
+      <div className="pt-6 pb-24 max-w-7xl mx-auto px-6">
         <div className="flex items-center gap-3 mb-12">
           <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
             <Images size={24} />
@@ -112,7 +112,7 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
   }
 
   return (
-    <div className="pt-32 pb-24 max-w-7xl mx-auto px-6">
+    <div className="pt-6 pb-24 max-w-7xl mx-auto px-6">
 
       {/* ── Page Header ── */}
       <div className="flex items-center gap-3 mb-12">

@@ -8,12 +8,11 @@ export const Navbar = ({ isDarkMode, setIsDarkMode }: { isDarkMode: boolean, set
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Home',     href: '/' },
-    { name: 'Squad',    href: '/squad' },
-    { name: 'Fixtures', href: '/fixtures' },
-    { name: 'Results',  href: '/results' },
-    { name: 'Gallery',  href: '/gallery' },
-    { name: 'News',     href: '/news' },
+    { name: 'Home',       href: '/' },
+    { name: 'Squad',      href: '/squad' },
+    { name: 'Watch Live', href: '/watch' },
+    { name: 'Gallery',    href: '/gallery' },
+    { name: 'News',       href: '/news' },
   ];
 
   return (
@@ -21,22 +20,21 @@ export const Navbar = ({ isDarkMode, setIsDarkMode }: { isDarkMode: boolean, set
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
 
         {/* ── Logo ── */}
-<Link to="/" className="flex items-center gap-2 group">
-  <img
-    src={skyyLogo}
-    alt="SKYY FC"
-    className="h-24 w-auto object-contain group-hover:scale-110 transition-transform"
-  />
-  <div className="flex flex-col leading-tight">
-    <span className={`text-xl font-black tracking-tighter uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-      SKYY FC
-    </span>
-    <span className={`text-[10px] font-semibold tracking-widest uppercase ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
-      Division One League · Daboase
-    </span>
-  </div>
-</Link>
-
+        <Link to="/" className="flex items-center gap-2 group">
+          <img
+            src={skyyLogo}
+            alt="SKYY FC"
+            className="h-24 w-auto object-contain group-hover:scale-110 transition-transform"
+          />
+          <div className="flex flex-col leading-tight">
+            <span className={`text-xl font-black tracking-tighter uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+              SKYY FC
+            </span>
+            <span className={`text-[10px] font-semibold tracking-widest uppercase ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              Division One League · Daboase
+            </span>
+          </div>
+        </Link>
 
         {/* ── Desktop Nav ── */}
         <div className="hidden md:flex items-center gap-8">

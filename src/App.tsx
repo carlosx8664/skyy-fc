@@ -4,17 +4,21 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
 import { Squad } from './pages/Squad';
-import { Fixtures } from './pages/Fixtures';
-import { Results } from './pages/Results';
+import { WatchLive } from './pages/WatchLive';
 import { News } from './pages/News';
 import { NewsDetail } from './pages/NewsDetail';
 import { Gallery } from './pages/Gallery';
+
+const PageLayout = ({ children }: { children: React.ReactNode }) => (
+  <div className="pt-32">
+    {children}
+  </div>
+);
 
 export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const location = useLocation();
 
-  // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -33,13 +37,12 @@ export default function App() {
 
       <main className="min-h-[80vh]">
         <Routes>
-          <Route path="/"          element={<Home     isDarkMode={isDarkMode} />} />
-          <Route path="/squad"     element={<Squad    isDarkMode={isDarkMode} />} />
-          <Route path="/fixtures"  element={<Fixtures isDarkMode={isDarkMode} />} />
-          <Route path="/results"   element={<Results  isDarkMode={isDarkMode} />} />
-          <Route path="/news"      element={<News     isDarkMode={isDarkMode} />} />
-          <Route path="/news/:id"  element={<NewsDetail isDarkMode={isDarkMode} />} />
-          <Route path="/gallery"   element={<Gallery  isDarkMode={isDarkMode} />} />
+          <Route path="/"         element={<Home       isDarkMode={isDarkMode} />} />
+          <Route path="/squad"    element={<PageLayout><Squad     isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/watch"    element={<PageLayout><WatchLive isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/news"     element={<PageLayout><News      isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/news/:id" element={<PageLayout><NewsDetail isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/gallery"  element={<PageLayout><Gallery   isDarkMode={isDarkMode} /></PageLayout>} />
         </Routes>
       </main>
 
