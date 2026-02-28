@@ -23,29 +23,36 @@ const ARTICLES_PER_PAGE = 6;
 
 export const News = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [page, setPage]         = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     client
-      .fetch(`*[_type == "news"] | order(date desc) {
-        _id, title, date,
-        "image": image.asset->url
-      }`)
+      .fetch(
+        `*[_type == "stories"] | order(date desc) {
+          _id, title, date,
+          "image": image.asset->url
+        }`
+      )
       .then((data: NewsArticle[]) => {
         setArticles(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error('❌ Stories fetch error:', err);
+        setLoading(false);
+      });
   }, []);
 
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'long', year: 'numeric',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     }).toUpperCase();
 
   const totalPages = Math.ceil(articles.length / ARTICLES_PER_PAGE);
-  const paged      = articles.slice(page * ARTICLES_PER_PAGE, (page + 1) * ARTICLES_PER_PAGE);
+  const paged = articles.slice(page * ARTICLES_PER_PAGE, (page + 1) * ARTICLES_PER_PAGE);
 
   const goToPage = (p: number) => {
     setPage(p);
@@ -79,7 +86,6 @@ export const News = ({ isDarkMode }: { isDarkMode: boolean }) => {
   return (
     <div className="pt-6 pb-24 max-w-7xl mx-auto px-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-
         {/* Left Column: News List */}
         <div className="lg:col-span-8">
           <div className="flex items-center justify-between mb-12">
@@ -128,9 +134,11 @@ export const News = ({ isDarkMode }: { isDarkMode: boolean }) => {
                       {formatDate(article.date)}
                     </span>
                     <Link to={`/news/${article._id}`}>
-                      <h3 className={`text-lg font-black uppercase leading-tight
-                        hover:text-[#EFDC43] transition-colors
-                        ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                      <h3
+                        className={`text-lg font-black uppercase leading-tight
+                          hover:text-[#EFDC43] transition-colors
+                          ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}
+                      >
                         {article.title}
                       </h3>
                     </Link>

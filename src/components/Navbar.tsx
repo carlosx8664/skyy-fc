@@ -10,7 +10,7 @@ export const Navbar = ({ isDarkMode, setIsDarkMode }: { isDarkMode: boolean, set
   const navLinks = [
     { name: 'Home',       href: '/' },
     { name: 'Squad',      href: '/squad' },
-    { name: 'Watch Live', href: '/watch' },
+    { name: 'Watch', href: '/watch' },
     { name: 'Gallery',    href: '/gallery' },
     { name: 'News',       href: '/news' },
   ];
