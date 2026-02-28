@@ -51,7 +51,7 @@ export const Fixtures = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   if (loading) {
     return (
-      <div className={`pt-32 pb-24 flex items-center justify-center ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+      <div className={`pt-20 md:pt-32 pb-24 flex items-center justify-center ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
         <p className="text-xl font-bold animate-pulse">Loading Fixtures...</p>
       </div>
     );
@@ -59,12 +59,12 @@ export const Fixtures = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   if (!loading && fixtures.length === 0) {
     return (
-      <div className="pt-32 pb-24 max-w-7xl mx-auto px-6">
-        <div className="flex items-center gap-3 mb-12">
+      <div className="pt-20 md:pt-32 pb-24 max-w-7xl mx-auto px-4 md:px-6">
+        <div className="flex items-center gap-3 mb-10 md:mb-12">
           <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
             <CalendarIcon size={24} />
           </div>
-          <h2 className={`text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+          <h2 className={`text-2xl md:text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
             Upcoming Fixtures
           </h2>
         </div>
@@ -74,17 +74,17 @@ export const Fixtures = ({ isDarkMode }: { isDarkMode: boolean }) => {
   }
 
   return (
-    <div className="pt-32 pb-24 max-w-7xl mx-auto px-6">
-      <div className="flex items-center gap-3 mb-12">
+    <div className="pt-20 md:pt-32 pb-24 max-w-7xl mx-auto px-4 md:px-6">
+      <div className="flex items-center gap-3 mb-10 md:mb-12">
         <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
           <CalendarIcon size={24} />
         </div>
-        <h2 className={`text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+        <h2 className={`text-2xl md:text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
           Upcoming Fixtures
         </h2>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {fixtures.map((fixture) => {
           const formatted = formatDate(fixture.date);
           const homeName = fixture.homeTeam?.shortName ?? fixture.homeTeam?.name ?? 'TBD';
@@ -95,21 +95,22 @@ export const Fixtures = ({ isDarkMode }: { isDarkMode: boolean }) => {
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className={`p-8 rounded-sm border flex flex-col md:flex-row items-center justify-between gap-8 ${isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'}`}
+              className={`p-5 md:p-8 rounded-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 md:gap-8 ${isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'}`}
             >
-              <div className="flex items-center gap-8 flex-1">
-                <div className="text-center min-w-[80px]">
-                  <p className={`text-3xl font-black ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+              {/* Date + Match info */}
+              <div className="flex items-center gap-5 md:gap-8 flex-1 w-full">
+                <div className="text-center min-w-[56px] md:min-w-[80px]">
+                  <p className={`text-2xl md:text-3xl font-black ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                     {formatted.date}
                   </p>
                   <p className="text-xs font-bold text-[#EFDC43] uppercase">{formatted.day}</p>
                   <p className="text-xs text-zinc-500 uppercase">{formatted.month}</p>
                 </div>
-                <div className={`h-12 w-px hidden md:block ${isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`} />
-                <div>
-                  <p className={`text-xl font-black uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                <div className={`h-10 w-px hidden sm:block ${isDarkMode ? 'bg-white/10' : 'bg-zinc-200'}`} />
+                <div className="flex-1 min-w-0">
+                  <p className={`text-base md:text-xl font-black uppercase tracking-tight leading-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                     {homeName}{' '}
-                    <span className="text-zinc-500 mx-2 text-sm font-normal">vs</span>{' '}
+                    <span className="text-zinc-500 text-sm font-normal">vs</span>{' '}
                     {awayName}
                   </p>
                   {fixture.matchday && (
@@ -120,14 +121,15 @@ export const Fixtures = ({ isDarkMode }: { isDarkMode: boolean }) => {
                 </div>
               </div>
 
-              <div className="flex flex-col md:items-end gap-2">
-                <div className="flex items-center gap-2 text-sm font-bold text-zinc-400">
-                  <Clock size={16} className="text-[#EFDC43]" />
+              {/* Kick-off + venue */}
+              <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-2 text-sm w-full sm:w-auto">
+                <div className="flex items-center gap-2 font-bold text-zinc-400">
+                  <Clock size={14} className="text-[#EFDC43]" />
                   {fixture.kickOff}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-zinc-500 uppercase">
-                  <MapPin size={14} />
-                  {fixture.venue}
+                  <MapPin size={12} />
+                  <span className="truncate max-w-[160px] sm:max-w-none">{fixture.venue}</span>
                 </div>
               </div>
             </motion.div>

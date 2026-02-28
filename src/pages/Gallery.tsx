@@ -52,7 +52,6 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
       .catch(() => setLoading(false));
   }, []);
 
-  // Lightbox keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (lightboxIndex === null || !activeAlbum) return;
     if (e.key === 'ArrowRight') setLightboxIndex((i) => Math.min((i ?? 0) + 1, activeAlbum.images.length - 1));
@@ -65,7 +64,6 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // Lock body scroll when lightbox or album is open
   useEffect(() => {
     document.body.style.overflow = (lightboxIndex !== null || activeAlbum) ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -97,12 +95,12 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   if (!loading && albums.length === 0) {
     return (
-      <div className="pt-6 pb-24 max-w-7xl mx-auto px-6">
-        <div className="flex items-center gap-3 mb-12">
+      <div className="pt-6 pb-24 max-w-7xl mx-auto px-4 md:px-6">
+        <div className="flex items-center gap-3 mb-10 md:mb-12">
           <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
             <Images size={24} />
           </div>
-          <h2 className={`text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+          <h2 className={`text-2xl md:text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
             Gallery
           </h2>
         </div>
@@ -112,20 +110,20 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
   }
 
   return (
-    <div className="pt-6 pb-24 max-w-7xl mx-auto px-6">
+    <div className="pt-6 pb-24 max-w-7xl mx-auto px-4 md:px-6">
 
       {/* ── Page Header ── */}
-      <div className="flex items-center gap-3 mb-12">
+      <div className="flex items-center gap-3 mb-10 md:mb-12">
         <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
           <Images size={24} />
         </div>
-        <h2 className={`text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+        <h2 className={`text-2xl md:text-3xl font-bold tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
           Gallery
         </h2>
       </div>
 
       {/* ── Album Grid ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {albums.map((album) => (
           <motion.div
             key={album._id}
@@ -137,7 +135,6 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
               isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'
             }`}
           >
-            {/* Cover Image */}
             <div className="relative aspect-video overflow-hidden bg-zinc-800">
               {album.coverImage ? (
                 <img
@@ -150,11 +147,9 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
                   <Image size={40} className="text-zinc-600" />
                 </div>
               )}
-              {/* Image count badge */}
               <div className="absolute bottom-3 right-3 bg-black/70 text-white text-[10px] font-black px-2 py-1 rounded-sm uppercase tracking-wider">
                 {album.images?.length ?? 0} photos
               </div>
-              {/* Category badge */}
               {album.category && (
                 <div className="absolute top-3 left-3 bg-[#EFDC43] text-black text-[10px] font-black px-2 py-1 rounded-sm uppercase tracking-wider">
                   {categoryLabel(album.category)}
@@ -162,7 +157,6 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
               )}
             </div>
 
-            {/* Album Info */}
             <div className="p-4">
               <h3 className={`font-black uppercase tracking-tight text-sm mb-1 ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                 {album.title}
@@ -193,10 +187,9 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
             className="fixed inset-0 z-50 overflow-y-auto"
             style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
           >
-            {/* Modal Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-black/80 backdrop-blur-md border-b border-white/10">
-              <div>
-                <h3 className="text-white font-black uppercase tracking-tight text-lg">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-6 py-4 bg-black/80 backdrop-blur-md border-b border-white/10">
+              <div className="min-w-0 flex-1 pr-4">
+                <h3 className="text-white font-black uppercase tracking-tight text-base md:text-lg truncate">
                   {activeAlbum.title}
                 </h3>
                 <p className="text-zinc-500 text-xs uppercase font-bold mt-0.5">
@@ -206,14 +199,13 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
               </div>
               <button
                 onClick={() => setActiveAlbum(null)}
-                className="text-zinc-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+                className="text-zinc-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 flex-shrink-0"
               >
                 <X size={24} />
               </button>
             </div>
 
-            {/* Image Grid */}
-            <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div className="p-4 md:p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
               {activeAlbum.images?.map((img, index) => (
                 <motion.div
                   key={img._key}
@@ -255,7 +247,7 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
               onClick={() => setLightboxIndex(null)}
               className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 z-10"
             >
-              <X size={28} />
+              <X size={24} />
             </button>
 
             {/* Counter */}
@@ -263,13 +255,15 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
               {lightboxIndex + 1} / {activeAlbum.images.length}
             </div>
 
-            {/* Prev */}
+            {/* Prev — larger tap target on mobile */}
             <button
               onClick={() => setLightboxIndex((i) => Math.max((i ?? 0) - 1, 0))}
               disabled={lightboxIndex === 0}
-              className="absolute left-4 text-zinc-400 hover:text-white disabled:opacity-20 transition-colors p-3 rounded-full hover:bg-white/10"
+              className="absolute left-0 top-0 bottom-0 w-14 md:w-auto md:left-4 md:top-auto md:bottom-auto md:relative
+                flex items-center justify-start pl-2 md:pl-0 md:justify-center
+                text-zinc-400 hover:text-white disabled:opacity-20 transition-colors md:p-3 md:rounded-full md:hover:bg-white/10"
             >
-              <ChevronLeft size={32} />
+              <ChevronLeft size={28} />
             </button>
 
             {/* Image */}
@@ -281,7 +275,7 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
               transition={{ duration: 0.2 }}
               src={urlFor(activeAlbum.images[lightboxIndex], 1400)}
               alt={activeAlbum.images[lightboxIndex]?.caption ?? ''}
-              className="max-h-[85vh] max-w-[85vw] object-contain rounded-sm"
+              className="max-h-[80vh] max-w-[75vw] md:max-w-[85vw] object-contain rounded-sm"
             />
 
             {/* Caption */}
@@ -295,9 +289,11 @@ export const Gallery = ({ isDarkMode }: { isDarkMode: boolean }) => {
             <button
               onClick={() => setLightboxIndex((i) => Math.min((i ?? 0) + 1, activeAlbum.images.length - 1))}
               disabled={lightboxIndex === activeAlbum.images.length - 1}
-              className="absolute right-4 text-zinc-400 hover:text-white disabled:opacity-20 transition-colors p-3 rounded-full hover:bg-white/10"
+              className="absolute right-0 top-0 bottom-0 w-14 md:w-auto md:right-4 md:top-auto md:bottom-auto md:relative
+                flex items-center justify-end pr-2 md:pr-0 md:justify-center
+                text-zinc-400 hover:text-white disabled:opacity-20 transition-colors md:p-3 md:rounded-full md:hover:bg-white/10"
             >
-              <ChevronRight size={32} />
+              <ChevronRight size={28} />
             </button>
           </motion.div>
         )}

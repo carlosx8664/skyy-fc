@@ -19,17 +19,17 @@ export const Footer = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const linkClass = `transition-colors hover:text-[#EFDC43] ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`;
 
   return (
-    <footer className={`border-t pt-16 pb-8 ${isDarkMode ? 'bg-zinc-950 border-white/5' : 'bg-white border-zinc-200'}`}>
-      <div className="max-w-7xl mx-auto px-6">
+    <footer className={`border-t pt-12 md:pt-16 pb-8 ${isDarkMode ? 'bg-zinc-950 border-white/5' : 'bg-white border-zinc-200'}`}>
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
 
         {/* ── Main Footer Content ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 mb-10 md:mb-12">
 
           {/* Col 1 — Brand */}
-          <div>
+          <div className="sm:col-span-2 md:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <img src={skyyLogo} alt="SKYY FC" className="h-12 w-auto object-contain" />
-              <span className={`text-xl font-black tracking-tighter uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+              <img src={skyyLogo} alt="SKYY FC" className="h-10 md:h-12 w-auto object-contain" />
+              <span className={`text-lg md:text-xl font-black tracking-tighter uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                 {CLUB_INFO.name}
               </span>
             </div>
@@ -107,7 +107,7 @@ export const Footer = ({ isDarkMode }: { isDarkMode: boolean }) => {
         </div>
 
         {/* ── Bottom Bar ── */}
-        <div className={`border-t pt-6 flex flex-col md:flex-row items-center justify-between gap-4 ${isDarkMode ? 'border-white/5' : 'border-zinc-100'}`}>
+        <div className={`border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 ${isDarkMode ? 'border-white/5' : 'border-zinc-100'}`}>
           <p className={`text-[10px] uppercase tracking-[0.2em] ${isDarkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
             © {new Date().getFullYear()} {CLUB_INFO.name}. All Rights Reserved.
           </p>

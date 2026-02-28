@@ -3,21 +3,45 @@ export default {
   title: 'League Table Entry',
   type: 'document',
   fields: [
-    { name: 'position', title: 'Position',      type: 'number' },
-    { name: 'team',     title: 'Team Name',      type: 'string' },
-    { name: 'played',   title: 'Played',         type: 'number' },
-    { name: 'won',      title: 'Won',            type: 'number' },
-    { name: 'drawn',    title: 'Drawn',          type: 'number' },
-    { name: 'lost',     title: 'Lost',           type: 'number' },
-    { name: 'gf',       title: 'Goals For',      type: 'number' },
-    { name: 'ga',       title: 'Goals Against',  type: 'number' },
-    { name: 'points',   title: 'Points',         type: 'number' },
-    { name: 'isSkyy',   title: 'Is SKYY FC?',    type: 'boolean' },
+    {
+      name: 'position',
+      title: 'Position',
+      type: 'number',
+      options: {
+        list: Array.from({ length: 16 }, (_, i) => ({
+          title: String(i + 1),
+          value: i + 1,
+        })),
+      },
+      validation: (Rule: any) => Rule.required().min(1).max(16),
+    },
+
+    {
+      name: 'team',
+      title: 'Team',
+      type: 'reference',
+      to: [{ type: 'team' }],
+      validation: (Rule: any) => Rule.required(),
+    },
+
+    { name: 'played', title: 'Played', type: 'number', validation: (Rule: any) => Rule.min(0) },
+    { name: 'won', title: 'Won', type: 'number', validation: (Rule: any) => Rule.min(0) },
+    { name: 'drawn', title: 'Drawn', type: 'number', validation: (Rule: any) => Rule.min(0) },
+    { name: 'lost', title: 'Lost', type: 'number', validation: (Rule: any) => Rule.min(0) },
+    { name: 'gf', title: 'Goals For', type: 'number', validation: (Rule: any) => Rule.min(0) },
+    { name: 'ga', title: 'Goals Against', type: 'number', validation: (Rule: any) => Rule.min(0) },
+    { name: 'points', title: 'Points', type: 'number', validation: (Rule: any) => Rule.min(0) },
+
+    { name: 'isSkyy', title: 'Is SKYY FC?', type: 'boolean' },
   ],
+
   preview: {
-    select: { title: 'position', subtitle: 'team' },
-    prepare({ title, subtitle }: any) {
-      return { title: `${title}. ${subtitle}` };
+    select: {
+      position: 'position',
+      teamName: 'team.name',
+    },
+    prepare({ position, teamName }: any) {
+      return { title: `${position}. ${teamName ?? '—'}` };
     },
   },
 }

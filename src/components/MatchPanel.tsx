@@ -42,6 +42,14 @@ export const MatchPanel = ({ isDarkMode }: { isDarkMode: boolean }) => {
       .catch(() => setLoading(false));
   }, []);
 
+  const handleLeagueTableClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const el = document.getElementById('standings');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   // Always point countdown at the first future fixture
   const now = new Date();
   const upcomingFixtures = fixtures.filter(fx => new Date(fx.date) > now);
@@ -50,6 +58,16 @@ export const MatchPanel = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const { days, hours, mins, secs } = useCountdown(nextFixtureDate);
   const venue = nextFixture?.venue ?? 'TBD';
 
+  const leagueTableBtn = (
+    <a
+      href="#standings"
+      onClick={handleLeagueTableClick}
+      className="text-xs font-bold border rounded-full px-3 py-1 transition hover:opacity-70 whitespace-nowrap"
+      style={{ borderColor: '#EFDC43', color: '#EFDC43' }}>
+      League Table →
+    </a>
+  );
+
   return (
     <aside className={`rounded-2xl border p-6 flex flex-col gap-5 backdrop-blur-md
       ${isDarkMode
@@ -57,20 +75,25 @@ export const MatchPanel = ({ isDarkMode }: { isDarkMode: boolean }) => {
         : 'bg-black/5 border-black/10 text-zinc-900'}`}>
 
       {/* TOP */}
-      <div className="flex items-start justify-between">
-        <div>
-          <span className="text-xs font-bold tracking-widest uppercase"
-            style={{ color: '#EFDC43' }}>Next Fixture</span>
-          <h4 className="text-sm font-semibold mt-1 opacity-70">{venue}</h4>
+      <div className="flex flex-col gap-3">
+
+        {/* Mobile only: League Table on its own row above Next Fixture */}
+        <div className="flex justify-end md:hidden">
+          {leagueTableBtn}
         </div>
-        <a
-          href="https://www.ghanafa.org/division-one/division-one-tables?comp=2016"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs font-bold border rounded-full px-3 py-1 transition hover:opacity-70"
-          style={{ borderColor: '#EFDC43', color: '#EFDC43' }}>
-          League Table →
-        </a>
+
+        {/* Next Fixture row — League Table sits inline here on desktop */}
+        <div className="flex items-start justify-between">
+          <div>
+            <span className="text-xs font-bold tracking-widest uppercase"
+              style={{ color: '#EFDC43' }}>Next Fixture</span>
+            <h4 className="text-sm font-semibold mt-1 opacity-70">{venue}</h4>
+          </div>
+          {/* Desktop only */}
+          <div className="hidden md:flex">
+            {leagueTableBtn}
+          </div>
+        </div>
       </div>
 
       {/* COUNTDOWN */}

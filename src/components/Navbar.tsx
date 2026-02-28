@@ -16,22 +16,22 @@ export const Navbar = ({ isDarkMode, setIsDarkMode }: { isDarkMode: boolean, set
   ];
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isDarkMode ? 'bg-zinc-950/90 border-white/10' : 'bg-white/90 border-zinc-200'} backdrop-blur-md border-b py-4`}>
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isDarkMode ? 'bg-zinc-950/90 border-white/10' : 'bg-white/90 border-zinc-200'} backdrop-blur-md border-b h-16 md:h-28 flex items-center`}>
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 flex justify-between items-center">
 
         {/* ── Logo ── */}
         <Link to="/" className="flex items-center gap-2 group">
           <img
             src={skyyLogo}
             alt="SKYY FC"
-            className="h-24 w-auto object-contain group-hover:scale-110 transition-transform"
+            className="h-10 md:h-20 w-auto object-contain group-hover:scale-110 transition-transform"
           />
           <div className="flex flex-col leading-tight">
-            <span className={`text-xl font-black tracking-tighter uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+            <span className={`text-base md:text-xl font-black tracking-tighter uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
               SKYY FC
             </span>
-            <span className={`text-[10px] font-semibold tracking-widest uppercase ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
-              Division One League · Daboase
+            <span className={`text-[9px] md:text-[10px] font-semibold tracking-widest uppercase ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              Division One · Daboase
             </span>
           </div>
         </Link>

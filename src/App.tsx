@@ -10,7 +10,7 @@ import { NewsDetail } from './pages/NewsDetail';
 import { Gallery } from './pages/Gallery';
 
 const PageLayout = ({ children }: { children: React.ReactNode }) => (
-  <div className="pt-32">
+  <div className="pt-16 md:pt-32">
     {children}
   </div>
 );

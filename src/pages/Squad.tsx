@@ -26,6 +26,14 @@ interface Player {
 
 const FILTERS = [
   { label: 'All',         value: 'all' },
+  { label: 'GK',          value: 'goalkeeper' },
+  { label: 'DEF',         value: 'defender' },
+  { label: 'MID',         value: 'midfielder' },
+  { label: 'FWD',         value: 'forward' },
+];
+
+const FILTERS_FULL = [
+  { label: 'All',         value: 'all' },
   { label: 'Goalkeepers', value: 'goalkeeper' },
   { label: 'Defenders',   value: 'defender' },
   { label: 'Midfielders', value: 'midfielder' },
@@ -59,6 +67,12 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  // Prevent body scroll when modal open
+  useEffect(() => {
+    document.body.style.overflow = selected ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [selected]);
+
   const filtered = filter === 'all'
     ? players
     : players.filter(p => p.category === filter);
@@ -76,10 +90,10 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
     <div className={`pt-6 pb-24 ${isDarkMode ? 'bg-zinc-950' : 'bg-zinc-50'}`}>
 
       {/* ── Header ── */}
-      <div className="max-w-7xl mx-auto px-6 mb-10
-        flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 mb-8 md:mb-10
+        flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
         <div>
-          <h2 className={`text-5xl font-black tracking-tight
+          <h2 className={`text-4xl md:text-5xl font-black tracking-tight
             ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
             Our Squad
           </h2>
@@ -89,28 +103,49 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
           </p>
         </div>
 
+        {/* Mobile: abbreviated labels; Desktop: full labels */}
         <div className="flex flex-wrap gap-2">
-          {FILTERS.map(f => (
-            <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
-              className={`px-4 py-2 rounded-full text-xs font-bold border transition
-                ${filter === f.value
-                  ? 'text-black border-[#EFDC43]'
-                  : isDarkMode
-                    ? 'border-white/20 text-white hover:border-white/50'
-                    : 'border-zinc-300 text-zinc-700 hover:border-zinc-500'}`}
-              style={filter === f.value ? { backgroundColor: '#EFDC43' } : {}}>
-              {f.label}
-            </button>
-          ))}
+          {/* Mobile filters */}
+          <div className="flex gap-2 md:hidden">
+            {FILTERS.map(f => (
+              <button
+                key={f.value}
+                onClick={() => setFilter(f.value)}
+                className={`px-3 py-2 rounded-full text-xs font-bold border transition
+                  ${filter === f.value
+                    ? 'text-black border-[#EFDC43]'
+                    : isDarkMode
+                      ? 'border-white/20 text-white hover:border-white/50'
+                      : 'border-zinc-300 text-zinc-700 hover:border-zinc-500'}`}
+                style={filter === f.value ? { backgroundColor: '#EFDC43' } : {}}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+          {/* Desktop filters */}
+          <div className="hidden md:flex gap-2">
+            {FILTERS_FULL.map(f => (
+              <button
+                key={f.value}
+                onClick={() => setFilter(f.value)}
+                className={`px-4 py-2 rounded-full text-xs font-bold border transition
+                  ${filter === f.value
+                    ? 'text-black border-[#EFDC43]'
+                    : isDarkMode
+                      ? 'border-white/20 text-white hover:border-white/50'
+                      : 'border-zinc-300 text-zinc-700 hover:border-zinc-500'}`}
+                style={filter === f.value ? { backgroundColor: '#EFDC43' } : {}}>
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* ── Responsive Player Grid ── */}
-      <div className="max-w-7xl mx-auto px-6">
+      {/* ── Player Grid ── */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         <AnimatePresence mode="popLayout">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-5">
             {filtered.map((player, i) => (
               <motion.div
                 key={player._id}
@@ -125,7 +160,7 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
                     ? 'bg-zinc-950 border-white/10'
                     : 'bg-white border-zinc-200'}`}>
 
-                <div className="relative h-64 overflow-hidden bg-zinc-950">
+                <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden bg-zinc-950">
                   {player.isCaptain && (
                     <div className="absolute top-3 left-3 z-10 w-7 h-7 rounded-sm
                       flex items-center justify-center text-[10px] font-black text-black"
@@ -134,7 +169,7 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
                     </div>
                   )}
 
-                  <span className="absolute top-0 right-2 text-[100px] font-black
+                  <span className="absolute top-0 right-2 text-[80px] md:text-[100px] font-black
                     leading-none select-none z-0"
                     style={{ color: '#EFDC43', opacity: 0.12 }}>
                     {player.number}
@@ -158,12 +193,12 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
                     bg-gradient-to-t from-zinc-950 to-transparent" />
                 </div>
 
-                <div className={`p-4 ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
-                  <p className={`font-black text-sm leading-tight
+                <div className={`p-3 md:p-4 ${isDarkMode ? 'bg-zinc-950' : 'bg-white'}`}>
+                  <p className={`font-black text-xs md:text-sm leading-tight
                     ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                     {player.name}
                   </p>
-                  <p className={`text-[11px] mt-1 uppercase tracking-widest
+                  <p className={`text-[10px] md:text-[11px] mt-1 uppercase tracking-widest
                     ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
                     {player.position}
                   </p>
@@ -189,17 +224,23 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/80 backdrop-blur-sm"
             onClick={() => setSelected(null)}>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
               transition={{ type: 'spring', damping: 25 }}
               onClick={e => e.stopPropagation()}
-              className={`relative w-full max-w-3xl rounded-2xl overflow-hidden
+              className={`relative w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl overflow-hidden
+                max-h-[92vh] flex flex-col
                 ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`}>
+
+              {/* Mobile drag indicator */}
+              <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                <div className="w-10 h-1 rounded-full bg-zinc-400/40" />
+              </div>
 
               <button
                 onClick={() => setSelected(null)}
@@ -208,13 +249,14 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
                 <X size={16} className="text-white" />
               </button>
 
-              <div className="flex flex-col md:flex-row">
+              <div className="flex flex-col sm:flex-row overflow-y-auto">
 
-                <div className="relative md:w-72 h-72 md:h-auto flex-shrink-0
+                {/* Player image - shorter on mobile */}
+                <div className="relative w-full sm:w-72 h-52 sm:h-auto flex-shrink-0
                   overflow-hidden bg-zinc-950">
 
                   <span className="absolute top-2 right-2 font-black select-none z-0 leading-none"
-                    style={{ color: '#EFDC43', opacity: 0.15, fontSize: '10rem' }}>
+                    style={{ color: '#EFDC43', opacity: 0.15, fontSize: '8rem' }}>
                     {selected.number}
                   </span>
 
@@ -234,7 +276,7 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
                   )}
                 </div>
 
-                <div className="flex-1 p-6 md:p-8 overflow-y-auto max-h-[80vh] md:max-h-none">
+                <div className="flex-1 p-5 sm:p-6 md:p-8 overflow-y-auto">
 
                   <span className={`text-xs font-bold tracking-[0.3em] uppercase
                     opacity-40 block mb-2
@@ -242,7 +284,7 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
                     First Team
                   </span>
 
-                  <h2 className={`text-4xl font-black leading-tight mb-1
+                  <h2 className={`text-3xl md:text-4xl font-black leading-tight mb-1
                     ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                     {selected.name}
                   </h2>
@@ -266,13 +308,13 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
                       { label: 'Position',       value: selected.position },
                     ].map(({ label, value }) => (
                       <div key={label}
-                        className={`flex justify-between items-center px-4 py-3
+                        className={`flex flex-col sm:flex-row sm:justify-between sm:items-center px-3 py-2 sm:px-4 sm:py-3
                           ${isDarkMode ? 'bg-white/5' : 'bg-zinc-50'}`}>
-                        <span className={`text-xs font-bold uppercase tracking-wider
+                        <span className={`text-[10px] font-bold uppercase tracking-wider
                           ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                          {label}:
+                          {label}
                         </span>
-                        <span className={`text-xs font-bold
+                        <span className={`text-xs font-bold mt-0.5 sm:mt-0
                           ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                           {value ?? '—'}
                         </span>

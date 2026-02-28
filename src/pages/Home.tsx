@@ -84,7 +84,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
   }
 
   return (
-    <div className="pt-20">
+    <div className="pt-16 md:pt-20">
 
       {/* ── Hero Section with MatchPanel overlay ── */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -117,7 +117,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
           }}
         />
 
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2">
           {HERO_IMAGES.map((_, i) => (
             <button
               key={i}
@@ -129,11 +129,11 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
           ))}
         </div>
 
-        <div className="relative z-30 w-full max-w-7xl mx-auto px-6 py-32
-          flex flex-col lg:flex-row items-center gap-12">
+        <div className="relative z-30 w-full max-w-7xl mx-auto px-4 md:px-6 py-24 md:py-32
+          flex flex-col lg:flex-row items-center gap-8 md:gap-12">
 
           <motion.div
-            className="flex-1"
+            className="flex-1 w-full"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -143,23 +143,23 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
               SKYY FC 2026
             </span>
 
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter uppercase
               leading-none text-white drop-shadow-lg mb-6">
               The Season<br />
               <span style={{ color: '#EFDC43' }}>In Motion</span>
             </h1>
 
-            <p className="text-lg text-white/70 mb-2">Results. Momentum. Moments.</p>
-            <p className="text-sm text-white/50 mb-10">"{clubInfo.tagline}"</p>
+            <p className="text-base md:text-lg text-white/70 mb-2">Results. Momentum. Moments.</p>
+            <p className="text-sm text-white/50 mb-8 md:mb-10">"{clubInfo.tagline}"</p>
 
-            <ul className="flex gap-10">
+            <ul className="flex gap-8 md:gap-10">
               {[
                 { value: '7',  label: 'Wins' },
                 { value: '28', label: 'Goals' },
                 { value: '32', label: 'Players' },
               ].map(({ value, label }) => (
                 <li key={label} className="flex flex-col">
-                  <strong className="text-4xl font-black text-white">{value}</strong>
+                  <strong className="text-3xl md:text-4xl font-black text-white">{value}</strong>
                   <span className="text-xs uppercase tracking-widest text-white/50">{label}</span>
                 </li>
               ))}
@@ -181,17 +181,17 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
       <PartnersBar isDarkMode={isDarkMode} />
 
       {/* ── Main Content Grid ── */}
-      <main className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-12 grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-12">
 
         {/* Left Column: Latest News */}
-        <div id="news-section" className="lg:col-span-8 space-y-12">
+        <div id="news-section" className="lg:col-span-8 space-y-10 md:space-y-12">
 
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6 md:mb-8">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
-                <Newspaper size={24} />
+                <Newspaper size={20} />
               </div>
-              <h2 className={`text-3xl font-bold tracking-tight uppercase
+              <h2 className={`text-2xl md:text-3xl font-bold tracking-tight uppercase
                 ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                 Latest News
               </h2>
@@ -199,26 +199,26 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
             {totalPages > 1 && (
               <span className={`text-xs font-bold uppercase tracking-widest
                 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                Page {newsPage + 1} of {totalPages}
+                {newsPage + 1}/{totalPages}
               </span>
             )}
           </div>
 
-          {/* Articles — image + date + title only */}
-          <div className="space-y-12">
+          {/* Articles */}
+          <div className="space-y-10 md:space-y-12">
             {pagedNews.map((article) => (
               <motion.article
                 key={article._id}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className={`flex flex-col md:flex-row gap-8 pb-12 border-b last:border-0 group
+                className={`flex flex-col sm:flex-row gap-5 md:gap-8 pb-10 md:pb-12 border-b last:border-0 group
                   ${isDarkMode ? 'border-white/5' : 'border-zinc-200'}`}
               >
                 {/* Thumbnail */}
                 <Link
                   to={`/news/${article._id}`}
-                  className={`w-full md:w-64 h-48 flex-shrink-0 rounded-sm overflow-hidden border relative
+                  className={`w-full sm:w-52 md:w-64 h-44 md:h-48 flex-shrink-0 rounded-sm overflow-hidden border relative
                     ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
                 >
                   {article.image ? (
@@ -239,7 +239,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
                     {formatDate(article.date)}
                   </p>
                   <Link to={`/news/${article._id}`}>
-                    <h3 className={`text-3xl font-black uppercase tracking-tight leading-none
+                    <h3 className={`text-2xl md:text-3xl font-black uppercase tracking-tight leading-none
                       group-hover:text-[#EFDC43] transition-colors
                       ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                       {article.title}
@@ -248,7 +248,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
                   <Link
                     to={`/news/${article._id}`}
                     className="text-sm font-bold text-[#EFDC43] hover:opacity-80
-                      transition-opacity flex items-center gap-1 mt-2"
+                      transition-opacity flex items-center gap-1 mt-1 md:mt-2"
                   >
                     Continue <ArrowRight size={14} />
                   </Link>
