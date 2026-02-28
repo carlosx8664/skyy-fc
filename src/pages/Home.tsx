@@ -20,19 +20,21 @@ interface ClubInfo {
   tagline: string;
 }
 
-interface NewsArticle {
+interface StoryArticle {
   _id: string;
   title: string;
   date: string;
+  excerpt: string;
   image?: string;
+  showCoverImage?: boolean;
 }
 
 export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
-  const [clubInfo, setClubInfo]         = useState<ClubInfo>({ tagline: 'Division One League' });
-  const [news, setNews]                 = useState<NewsArticle[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [newsPage, setNewsPage]         = useState(0);
+  const [clubInfo, setClubInfo]          = useState<ClubInfo>({ tagline: 'Division One League' });
+  const [stories, setStories]            = useState<StoryArticle[]>([]);
+  const [loading, setLoading]            = useState(true);
+  const [currentSlide, setCurrentSlide]  = useState(0);
+  const [newsPage, setNewsPage]          = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -45,15 +47,18 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
   useEffect(() => {
     setClubInfo({ tagline: 'No Size!' });
 
+    // ✅ Updated to fetch "stories" (latest first)
     client
-      .fetch(`*[_type == "news"] | order(date desc) {
+      .fetch(`*[_type == "stories"] | order(date desc)[0...12] {
         _id,
         title,
         date,
-        "image": image.asset->url
+        excerpt,
+        "image": image.asset->url,
+        showCoverImage
       }`)
-      .then((data: NewsArticle[]) => {
-        setNews(data);
+      .then((data: StoryArticle[]) => {
+        setStories(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -65,19 +70,19 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
       month: 'short',
     }).toUpperCase();
 
-  const totalPages = Math.ceil(news.length / NEWS_PER_PAGE);
-  const pagedNews  = news.slice(newsPage * NEWS_PER_PAGE, (newsPage + 1) * NEWS_PER_PAGE);
+  const totalPages = Math.ceil(stories.length / NEWS_PER_PAGE);
+  const pagedStories = stories.slice(newsPage * NEWS_PER_PAGE, (newsPage + 1) * NEWS_PER_PAGE);
 
   const goToPage = (p: number) => {
     setNewsPage(p);
     document.getElementById('news-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (loading && news.length === 0) {
+  if (loading && stories.length === 0) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
         <p className={`text-xl font-bold animate-pulse ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-          Loading Latest Highlights...
+          Loading Latest Stories...
         </p>
       </div>
     );
@@ -183,7 +188,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
       {/* ── Main Content Grid ── */}
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-12 grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-12">
 
-        {/* Left Column: Latest News */}
+        {/* Left Column: Latest Stories */}
         <div id="news-section" className="lg:col-span-8 space-y-10 md:space-y-12">
 
           <div className="flex items-center justify-between mb-6 md:mb-8">
@@ -193,7 +198,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
               </div>
               <h2 className={`text-2xl md:text-3xl font-bold tracking-tight uppercase
                 ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-                Latest News
+                Latest Stories
               </h2>
             </div>
             {totalPages > 1 && (
@@ -204,11 +209,11 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
             )}
           </div>
 
-          {/* Articles */}
+          {/* Stories */}
           <div className="space-y-10 md:space-y-12">
-            {pagedNews.map((article) => (
+            {pagedStories.map((story) => (
               <motion.article
-                key={article._id}
+                key={story._id}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
@@ -217,14 +222,14 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
               >
                 {/* Thumbnail */}
                 <Link
-                  to={`/news/${article._id}`}
+                  to={`/news/${story._id}`}
                   className={`w-full sm:w-52 md:w-64 h-44 md:h-48 flex-shrink-0 rounded-sm overflow-hidden border relative
                     ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
                 >
-                  {article.image ? (
+                  {story.image ? (
                     <img
-                      src={article.image}
-                      alt={article.title}
+                      src={story.image}
+                      alt={story.title}
                       className="absolute inset-0 w-full h-full object-cover
                         transition-transform duration-500 group-hover:scale-105"
                     />
@@ -236,17 +241,17 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
                 {/* Date + Title + Continue */}
                 <div className="flex flex-col justify-center gap-2">
                   <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                    {formatDate(article.date)}
+                    {formatDate(story.date)}
                   </p>
-                  <Link to={`/news/${article._id}`}>
+                  <Link to={`/news/${story._id}`}>
                     <h3 className={`text-2xl md:text-3xl font-black uppercase tracking-tight leading-none
                       group-hover:text-[#EFDC43] transition-colors
                       ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-                      {article.title}
+                      {story.title}
                     </h3>
                   </Link>
                   <Link
-                    to={`/news/${article._id}`}
+                    to={`/news/${story._id}`}
                     className="text-sm font-bold text-[#EFDC43] hover:opacity-80
                       transition-opacity flex items-center gap-1 mt-1 md:mt-2"
                   >
