@@ -9,6 +9,7 @@ import { News } from './pages/News';
 import { NewsDetail } from './pages/NewsDetail';
 import { Gallery } from './pages/Gallery';
 import { About } from './pages/About';
+import { Review } from './pages/Review';
 
 const PageLayout = ({ children }: { children: React.ReactNode }) => (
   <div className="pt-16 md:pt-32">
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/news/:id" element={<PageLayout><NewsDetail isDarkMode={isDarkMode} /></PageLayout>} />
           <Route path="/gallery"  element={<PageLayout><Gallery   isDarkMode={isDarkMode} /></PageLayout>} />
           <Route path="/about"    element={<PageLayout><About     isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/review"   element={<PageLayout><Review    isDarkMode={isDarkMode} /></PageLayout>} />
         </Routes>
       </main>
 
