@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { client } from '../lib/sanityClient';
-import { Radio, PlayCircle, Lock } from 'lucide-react';
+import { Radio, PlayCircle, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface LiveStream {
   isLive: boolean;
@@ -14,6 +14,8 @@ interface ReplayMatch {
   videoUrl: string;
   date?: string;
 }
+
+const MATCHES_PER_PAGE = 5;
 
 const getEmbedUrl = (url: string, autoplay: boolean) => {
   if (!url) return null;
@@ -40,6 +42,7 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [replays, setReplays] = useState<ReplayMatch[]>([]);
   const [selectedReplayId, setSelectedReplayId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,6 +95,9 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const isLive = !!stream?.isLive;
   const liveEmbedUrl = stream?.youtubeUrl ? getEmbedUrl(stream.youtubeUrl, true) : null;
 
+  const totalPages = Math.ceil(replays.length / MATCHES_PER_PAGE);
+  const pagedReplays = replays.slice(page * MATCHES_PER_PAGE, (page + 1) * MATCHES_PER_PAGE);
+
   const selectedReplay = useMemo(
     () => replays.find((r) => r._id === selectedReplayId) ?? null,
     [replays, selectedReplayId]
@@ -101,6 +107,16 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   const activeTitle = isLive ? stream?.matchTitle ?? 'LIVE' : selectedReplay?.title ?? 'WATCH';
   const activeEmbedUrl = isLive ? liveEmbedUrl : replayEmbedUrl;
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    // If selected replay is not on the new page, select the first on that page
+    const newPageReplays = replays.slice(newPage * MATCHES_PER_PAGE, (newPage + 1) * MATCHES_PER_PAGE);
+    const stillVisible = newPageReplays.find((r) => r._id === selectedReplayId);
+    if (!stillVisible && newPageReplays.length > 0) {
+      setSelectedReplayId(newPageReplays[0]._id);
+    }
+  };
 
   return (
     <div className={`pt-6 pb-24 min-h-screen ${isDarkMode ? 'bg-zinc-950' : 'bg-zinc-50'}`}>
@@ -183,40 +199,68 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
                 ) : replays.length === 0 ? (
                   <p className={`text-sm p-3 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>No previous matches yet.</p>
                 ) : (
-                  <div className="space-y-2">
-                    {replays.map((m) => {
-                      const active = m._id === selectedReplayId;
-                      const disabled = isLive;
+                  <>
+                    <div className="space-y-2">
+                      {pagedReplays.map((m) => {
+                        const active = m._id === selectedReplayId;
+                        const disabled = isLive;
 
-                      return (
-                        <button
-                          key={m._id}
-                          disabled={disabled}
-                          onClick={() => setSelectedReplayId(m._id)}
-                          className={[
-                            'w-full text-left rounded-xl px-3 py-3 border transition',
-                            disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-[#EFDC43]/60',
-                            active ? 'border-[#EFDC43] bg-[#EFDC43]/10' : (isDarkMode ? 'border-white/10 bg-zinc-950/30' : 'border-zinc-200 bg-white'),
-                          ].join(' ')}
-                          title={disabled ? 'Live match is on. Replays are disabled.' : m.title}
-                        >
-                          <div className="flex items-start gap-3">
-                            <PlayCircle className={`${active ? 'text-[#EFDC43]' : (isDarkMode ? 'text-zinc-400' : 'text-zinc-500')}`} size={18} />
-                            <div className="min-w-0">
-                              <p className={`font-black uppercase tracking-tight text-sm ${isDarkMode ? 'text-white' : 'text-zinc-900'} truncate`}>
-                                {m.title}
-                              </p>
-                              {m.date && (
-                                <p className={`text-[11px] mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                                  {formatDate(m.date)}
+                        return (
+                          <button
+                            key={m._id}
+                            disabled={disabled}
+                            onClick={() => setSelectedReplayId(m._id)}
+                            className={[
+                              'w-full text-left rounded-xl px-3 py-3 border transition',
+                              disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-[#EFDC43]/60',
+                              active ? 'border-[#EFDC43] bg-[#EFDC43]/10' : (isDarkMode ? 'border-white/10 bg-zinc-950/30' : 'border-zinc-200 bg-white'),
+                            ].join(' ')}
+                            title={disabled ? 'Live match is on. Replays are disabled.' : m.title}
+                          >
+                            <div className="flex items-start gap-3">
+                              <PlayCircle className={`${active ? 'text-[#EFDC43]' : (isDarkMode ? 'text-zinc-400' : 'text-zinc-500')}`} size={18} />
+                              <div className="min-w-0">
+                                <p className={`font-black uppercase tracking-tight text-sm ${isDarkMode ? 'text-white' : 'text-zinc-900'} truncate`}>
+                                  {m.title}
                                 </p>
-                              )}
+                                {m.date && (
+                                  <p className={`text-[11px] mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                                    {formatDate(m.date)}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className={`flex items-center justify-between mt-3 pt-3 border-t text-[10px] uppercase font-black
+                        ${isDarkMode ? 'border-white/5 text-zinc-500' : 'border-zinc-100 text-zinc-400'}`}>
+                        <button
+                          onClick={() => handlePageChange(page - 1)}
+                          disabled={page === 0}
+                          className={`flex items-center gap-1 transition-colors disabled:opacity-30
+                            ${page === 0 ? 'cursor-default' : 'hover:text-[#EFDC43] cursor-pointer'}`}
+                        >
+                          <ChevronLeft size={12} /> Prev
                         </button>
-                      );
-                    })}
-                  </div>
+                        <span className={isDarkMode ? 'text-zinc-600' : 'text-zinc-300'}>
+                          {page + 1} / {totalPages}
+                        </span>
+                        <button
+                          onClick={() => handlePageChange(page + 1)}
+                          disabled={page === totalPages - 1}
+                          className={`flex items-center gap-1 transition-colors disabled:opacity-30
+                            ${page === totalPages - 1 ? 'cursor-default' : 'hover:text-[#EFDC43] cursor-pointer'}`}
+                        >
+                          Next <ChevronRight size={12} />
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {isLive && (
