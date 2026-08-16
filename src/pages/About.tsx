@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Users, Target, Zap, Eye, Shield, Star, ChevronDown, ChevronUp, Building2, Trophy, Award, Globe, Heart, Briefcase } from 'lucide-react';
+import { Users, Target, Zap, Eye, Shield, Star, ChevronDown, ChevronUp, Building2, Trophy, Award, Globe, Heart, Briefcase, TrendingUp, DollarSign, PieChart, BarChart3 } from 'lucide-react';
 
 const pillars = [
   { icon: Eye,    title: 'Vision',      text: 'Develop Skyy FC into a model professional club in Ghana known for quality Players and Management.' },
@@ -397,6 +397,335 @@ const HistorySection = ({ isDarkMode }: { isDarkMode: boolean }) => {
   );
 };
 
+// ─── Financial Report Section ──────────────────────────────────────────────
+const FinancialReportSection = ({ isDarkMode }: { isDarkMode: boolean }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <section className={`py-12 md:py-16 border-y ${isDarkMode ? 'border-white/5 bg-zinc-900/50' : 'border-zinc-200 bg-zinc-50'}`}>
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+          {/* Left: Highlight */}
+          <div className="lg:w-1/3 flex-shrink-0">
+            <div className="sticky top-24">
+              <span className="text-xs font-bold tracking-[0.3em] uppercase text-[#EFDC43] block mb-2">
+                Financial Report
+              </span>
+              <h2 className={`text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-tight
+                ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                Ten-Year<br />
+                <span className="text-[#EFDC43]">Performance</span>
+              </h2>
+              <p className={`mt-3 text-sm ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                2016/17 – 2026/27
+              </p>
+              <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                Building a Sustainable Football Institution Through Strategic Investment
+              </p>
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-[#EFDC43] text-black font-black text-sm uppercase tracking-widest rounded-full hover:bg-[#EFDC43]/80 transition-colors"
+              >
+                {expanded ? 'Show Less' : 'Read Full Report'}
+                {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Right: Content */}
+          <div className={`lg:w-2/3 space-y-4 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
+            <div className={`text-sm leading-relaxed ${!expanded ? 'line-clamp-6' : ''}`}>
+              <p className="mb-4 font-medium">
+                Over the past decade, Skyy Football Club has evolved from a newly established Division Two side into one of Ghana's most respected and professionally managed Division One football clubs.
+              </p>
+              <p className="mb-4">
+                Founded on the principles of discipline, youth development and community impact, the Club has consistently invested in building a sustainable football institution rather than simply assembling competitive teams. This philosophy has enabled Skyy FC to remain financially stable while strengthening its technical capacity, improving player welfare and developing talent capable of competing at the highest levels.
+              </p>
+              <p className="mb-4">
+                Since its inception in 2016, Skyy FC has been impacted by <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>GH¢6.12m Equity injection</strong> and <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>GH¢2.0m revenue reinvestment</strong>. These investments have produced modern coaching structures, improved infrastructure, enhanced player development systems and a recognised football brand throughout Ghana.
+              </p>
+              <p className="mb-4 font-medium">
+                Today, Skyy FC is positioned not only as a competitive football club but as an investment platform capable of delivering sporting success, commercial growth and long-term value for strategic partners.
+              </p>
+
+              {expanded && (
+                <>
+                  {/* Financial Highlights */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-[#EFDC43]/10 border border-[#EFDC43]/20">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-4">
+                      Ten-Year Financial Highlights
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="text-xs opacity-60">Total Income Generated</p>
+                        <p className="text-xl font-black text-[#EFDC43]">GH¢8,119,040</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="text-xs opacity-60">Revenue Generated</p>
+                        <p className="text-xl font-black text-[#EFDC43]">GH¢2,000,000</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="text-xs opacity-60">Total Operational Investment</p>
+                        <p className="text-xl font-black text-[#EFDC43]">GH¢7,240,630</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="text-xs opacity-60">Net Operating Surplus</p>
+                        <p className="text-xl font-black text-[#EFDC43]">GH¢878,410</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20 sm:col-span-2">
+                        <p className="text-xs opacity-60">Growth in Annual Income</p>
+                        <p className="text-lg font-black">
+                          <span className="text-[#EFDC43]">GH¢115,000</span>
+                          <span className="text-xs opacity-50 mx-2">(2016/17)</span>
+                          <span className="text-zinc-500">→</span>
+                          <span className="text-[#EFDC43]">GH¢1,254,000</span>
+                          <span className="text-xs opacity-50 mx-2">(2025/26)</span>
+                          <span className="text-xs text-green-500 font-bold">+990%</span>
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20 sm:col-span-2">
+                        <p className="text-xs opacity-60">Growth in Operating Budget</p>
+                        <p className="text-lg font-black">
+                          <span className="text-[#EFDC43]">GH¢104,160</span>
+                          <span className="text-xs opacity-50 mx-2">→</span>
+                          <span className="text-[#EFDC43]">GH¢1,048,750</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Financial Journey */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-zinc-800/50 border border-white/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Financial Journey
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-[#EFDC43]/80 mb-1">
+                          Phase One (2016–2018) – Building the Foundation
+                        </h4>
+                        <p className="text-sm">
+                          Skyy FC's maiden season established the financial discipline that continues to guide the Club today. Operating with an expenditure budget of just <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>GH¢104,160</strong>, the Club successfully financed player recruitment, technical staff, match operations, club administration, marketing, and the promotion campaign. The season concluded with promotion to Division One while recording an operating surplus. The following year saw significant investment in infrastructure, particularly the development of St. Martin's Park, preparing the Club for professional football.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-[#EFDC43]/80 mb-1">
+                          Phase Two (2018–2021) – Investing in Competitive Growth
+                        </h4>
+                        <p className="text-sm">
+                          Following promotion, the Club increased investment in player recruitment, coaching staff, residential accommodation, medical support, match logistics, and football operations. During this period Skyy FC consistently challenged for Premier League promotion while maintaining responsible financial management. Operational expenditure increased from <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>GH¢222,390</strong> to over <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>GH¢652,000</strong> as the Club expanded professionally.
+                        </p>
+                      </div>
+
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-[#EFDC43]/80 mb-1">
+                          Phase Three (2021–2026) – Professional Expansion
+                        </h4>
+                        <p className="text-sm">
+                          The Club entered a period of accelerated growth characterised by improved sponsorship income, increased player transfer revenue, expanded commercial activities, greater investment in player welfare, modern coaching education, and enhanced marketing. Annual incomes exceeded <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>GH¢1.25 million</strong>, allowing continued investment without compromising operational stability.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Revenue Analysis */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-[#EFDC43]/5 border border-[#EFDC43]/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Revenue Analysis
+                    </h3>
+                    <p className="text-sm mb-3">Over the past decade, Skyy FC has diversified its revenue sources to reduce dependence on any single funding stream.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Shareholder Investment</p>
+                        <p className="text-xs">Owner equity and shareholder loans provided the financial foundation that enabled the Club to establish itself as a competitive football institution.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Corporate Sponsorship</p>
+                        <p className="text-xs">Sponsorship income increased steadily as the Club strengthened its brand and reputation.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Player Transfers</p>
+                        <p className="text-xs">The emergence of player transfer income reflects the success of Skyy FC's youth development strategy. Investment in young footballers has become one of the Club's strongest commercial assets.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Match-Day Revenue</p>
+                        <p className="text-xs">Gate receipts continue to grow alongside supporter engagement and improved match-day experiences.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Tournament Income</p>
+                        <p className="text-xs">Participation in domestic competitions has generated additional revenue while increasing national exposure.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Merchandise & Fundraising</p>
+                        <p className="text-xs">Community fundraising and merchandise sales demonstrate the growing support for the Skyy FC brand.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expenditure Analysis */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-zinc-800/50 border border-white/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Expenditure Analysis
+                    </h3>
+                    <p className="text-sm mb-3">The Club's financial philosophy prioritises investment that directly improves football performance.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Technical Development</p>
+                        <p className="text-xs">Coaches, technical staff, performance analysis, and tactical development.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Player Welfare</p>
+                        <p className="text-xs">Residential accommodation, nutrition, medical care, transportation, and match preparation.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Player Recruitment</p>
+                        <p className="text-xs">Consistent investment in player acquisition has strengthened squad quality while creating future transfer opportunities.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Infrastructure</p>
+                        <p className="text-xs">Investment in St. Martin's Park and operational facilities has enhanced the Club's long-term capacity.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20 sm:col-span-2">
+                        <p className="font-bold text-[#EFDC43]">Brand Development</p>
+                        <p className="text-xs">Media and marketing expenditure has significantly increased the Club's visibility, supporter engagement and commercial attractiveness.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Financial Performance Indicators */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-[#EFDC43]/10 border border-[#EFDC43]/20">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Financial Performance Indicators
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Income Growth</p>
+                        <p className="text-sm">Annual income increased from <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>GH¢115,000</strong> to <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>GH¢1,254,000</strong> within ten seasons.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Commercial Growth</p>
+                        <p className="text-sm">Commercial income has expanded through sponsorship, player transfers, equity injection, fundraising, merchandise, and tournament participation.</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold text-[#EFDC43]">Sustainable Investment</p>
+                        <p className="text-sm">Rather than pursuing short-term success, Skyy FC has consistently reinvested resources into football development and organisational capacity.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Why Invest */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-zinc-800/50 border border-white/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Why Skyy FC Represents a Strong Investment Opportunity
+                    </h3>
+                    <ul className="text-sm space-y-2 ml-4 list-disc">
+                      <li><strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>Proven Track Record:</strong> Ten consecutive years of football operations. Consistent participation in Ghana's Division One League. Strong governance and disciplined financial management.</li>
+                      <li><strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>Successful Player Development:</strong> The Club has developed players who have generated significant transfer income, validating its football development model.</li>
+                      <li><strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>Strong Brand Identity:</strong> Known as The Pride of Wassa, Skyy FC enjoys a growing reputation, an expanding supporter base and increasing media visibility.</li>
+                      <li><strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>Growth Potential:</strong> With continued investment, the Club is well positioned to achieve promotion to the Ghana Premier League, expand commercial partnerships, increase player transfer revenues, strengthen digital media engagement, and enhance infrastructure.</li>
+                    </ul>
+                  </div>
+
+                  {/* Sustainability Strategy */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-[#EFDC43]/5 border border-[#EFDC43]/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Financial Sustainability Strategy
+                    </h3>
+                    <p className="text-sm mb-3">Over the next five years, Skyy FC aims to strengthen financial independence by increasing internally generated revenue.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                      <div className="p-2 px-3 rounded-lg bg-black/20">
+                        <p className="text-xs">• Expanding sponsorship portfolios</p>
+                      </div>
+                      <div className="p-2 px-3 rounded-lg bg-black/20">
+                        <p className="text-xs">• Growing player transfer income</p>
+                      </div>
+                      <div className="p-2 px-3 rounded-lg bg-black/20">
+                        <p className="text-xs">• Commercialising digital platforms</p>
+                      </div>
+                      <div className="p-2 px-3 rounded-lg bg-black/20">
+                        <p className="text-xs">• Increasing merchandising</p>
+                      </div>
+                      <div className="p-2 px-3 rounded-lg bg-black/20">
+                        <p className="text-xs">• Enhancing match-day experiences</p>
+                      </div>
+                      <div className="p-2 px-3 rounded-lg bg-black/20">
+                        <p className="text-xs">• Developing football academies</p>
+                      </div>
+                      <div className="p-2 px-3 rounded-lg bg-black/20">
+                        <p className="text-xs">• Investing in sports science and technology</p>
+                      </div>
+                      <div className="p-2 px-3 rounded-lg bg-black/20">
+                        <p className="text-xs">• Building strategic corporate partnerships</p>
+                      </div>
+                    </div>
+                    <p className="text-sm mt-3">The objective is to reduce reliance on shareholder funding while creating a self-sustaining football institution.</p>
+                  </div>
+
+                  {/* Future Outlook */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-zinc-800/50 border border-white/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Future Outlook
+                    </h3>
+                    <p className="text-sm">
+                      The next decade represents an exciting opportunity for Skyy Football Club. With a proven operating history, sound financial management and a recognised commitment to player development, the Club is positioned to become one of Ghana's leading football institutions.
+                    </p>
+                    <p className="text-sm mt-2">
+                      Skyy FC is actively seeking strategic investors and commercial partners who share its vision of building a professionally managed club capable of competing successfully at the highest level of Ghanaian and African football.
+                    </p>
+                  </div>
+
+                  {/* Investor Invitation */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-[#EFDC43]/10 border border-[#EFDC43]/20 text-center">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Partner With Skyy Football Club
+                    </h3>
+                    <p className="text-sm">
+                      Skyy FC welcomes partnerships with investors, sponsors and organisations seeking to support the growth of a dynamic football institution with measurable impact.
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2 mt-3">
+                      <span className="px-3 py-1 text-xs bg-black/20 rounded-full">Club sponsorship</span>
+                      <span className="px-3 py-1 text-xs bg-black/20 rounded-full">Stadium naming rights</span>
+                      <span className="px-3 py-1 text-xs bg-black/20 rounded-full">Youth academy partnerships</span>
+                      <span className="px-3 py-1 text-xs bg-black/20 rounded-full">Infrastructure development</span>
+                      <span className="px-3 py-1 text-xs bg-black/20 rounded-full">Player development programmes</span>
+                      <span className="px-3 py-1 text-xs bg-black/20 rounded-full">CSR initiatives</span>
+                      <span className="px-3 py-1 text-xs bg-black/20 rounded-full">Commercial & media partnerships</span>
+                    </div>
+                    <p className="text-sm mt-3 font-medium">
+                      Together, we can build a football institution that delivers sporting success, develops young talent and creates sustainable value for all stakeholders.
+                    </p>
+                  </div>
+
+                  {/* Conclusion */}
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-zinc-800/50 border border-white/10 text-center">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Conclusion
+                    </h3>
+                    <p className="text-sm">
+                      The first ten years of Skyy Football Club have been defined by ambition, resilience and disciplined investment. From a modest inaugural budget to a multimillion-cedi football operation, the Club has laid a strong financial and organisational foundation for the future.
+                    </p>
+                    <p className="text-sm mt-2">
+                      As Skyy FC enters its second decade, it remains committed to sound governance, sustainable growth and the pursuit of excellence on and off the pitch.
+                    </p>
+                    <p className="text-sm mt-2 font-medium">
+                      Skyy Football Club is not only investing in football—it is investing in people, communities and the future of Ghanaian sport.
+                    </p>
+                    <p className="text-sm mt-3 text-[#EFDC43] font-black uppercase tracking-widest">
+                      "Building Champions. Creating Value. Inspiring Communities."
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 // ─── Main About Component ──────────────────────────────────────────────────
 export const About = ({ isDarkMode }: { isDarkMode: boolean }) => {
   return (
@@ -484,6 +813,9 @@ export const About = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
       {/* ── History Section ── */}
       <HistorySection isDarkMode={isDarkMode} />
+
+      {/* ── Financial Report Section ── */}
+      <FinancialReportSection isDarkMode={isDarkMode} />
 
     </div>
   );
