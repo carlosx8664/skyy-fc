@@ -29,6 +29,143 @@ interface StoryArticle {
   showCoverImage?: boolean;
 }
 
+// ─── Campaign Section Component ──────────────────────────────────────────────
+const CampaignSection = ({ isDarkMode }: { isDarkMode: boolean }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <section className={`py-12 md:py-16 border-y ${isDarkMode ? 'border-white/5 bg-zinc-900/50' : 'border-zinc-200 bg-zinc-50'}`}>
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+          {/* Left: Campaign Highlight */}
+          <div className="lg:w-1/3 flex-shrink-0">
+            <div className="sticky top-24">
+              <span className="text-xs font-bold tracking-[0.3em] uppercase text-[#EFDC43] block mb-2">
+                Campaign 2026/27
+              </span>
+              <h2 className={`text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-tight
+                ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                Together<br />
+                <span className="text-[#EFDC43]">We Shine</span>
+              </h2>
+              <p className={`mt-3 text-sm ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                Support Skyy FC's Ghana Premier League Qualification Project
+              </p>
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-[#EFDC43] text-black font-black text-sm uppercase tracking-widest rounded-full hover:bg-[#EFDC43]/80 transition-colors"
+              >
+                {expanded ? 'Show Less' : 'Read More'}
+                <ArrowRight size={16} className={`transition-transform ${expanded ? 'rotate-90' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Right: Campaign Content */}
+          <div className={`lg:w-2/3 space-y-4 ${isDarkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
+            <div className={`text-sm leading-relaxed ${!expanded ? 'line-clamp-6' : ''}`}>
+              <p className="mb-4">
+                For ten remarkable years, <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>Skyy FC – Daboase</strong>, the Pride of Wassa East has carried the hopes of our people, providing professional football, inspiring young talent, and proudly raising the flag of Wassa East and the Western Region across Ghana.
+              </p>
+              <p className="mb-4">
+                Now, we stand on the threshold of history. Our mission is clear: <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>Qualify Skyy FC to the Ghana Premier League by May 2027.</strong>
+              </p>
+              <p className="mb-4">
+                This is more than a football campaign. It is a movement to unite our communities, inspire the next generation, and place Wassa East on Ghana's biggest football stage.
+              </p>
+
+              {expanded && (
+                <>
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-[#EFDC43]/10 border border-[#EFDC43]/20">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      Become Part of Our Legacy
+                    </h3>
+                    <p className="text-sm">
+                      We invite individuals, businesses, institutions, and friends of Skyy FC everywhere to join Operation Skyy FC to the Ghana Premier League. Your contribution is not just a donation—it is an investment in the dreams of thousands of young people and a lasting legacy for generations to come.
+                    </p>
+                  </div>
+
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-zinc-800/50 border border-white/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      A Lasting Legacy
+                    </h3>
+                    <p className="text-sm mb-3">
+                      As part of this ambitious project, Skyy FC will construct a <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>three-storey Legacy Stand</strong> at St. Martin's Park featuring:
+                    </p>
+                    <ul className="text-sm space-y-2 ml-4 list-disc">
+                      <li>Modern team changing rooms</li>
+                      <li>A 1,000-seat spectator stand</li>
+                      <li>A permanent <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>Donors' Honour Wall</strong> celebrating everyone who made this dream possible</li>
+                    </ul>
+                    <p className="text-sm mt-3">Your generosity will forever be remembered.</p>
+                  </div>
+
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-[#EFDC43]/5 border border-[#EFDC43]/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#EFDC43] mb-3">
+                      How to Contribute
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold uppercase text-xs tracking-widest text-[#EFDC43]">Bank Transfer</p>
+                        <p className="text-xs mt-1">Account: Skyy FC</p>
+                        <p className="text-xs">Bank: Access Bank</p>
+                        <p className="text-xs font-mono">1047000004991</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold uppercase text-xs tracking-widest text-[#EFDC43]">Mobile Money</p>
+                        <p className="text-xs mt-1 font-mono">Westserve</p>
+                        <p className="text-xs font-mono">054 101 1128</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold uppercase text-xs tracking-widest text-[#EFDC43]">Pickup Service</p>
+                        <p className="text-xs mt-1 font-mono">024 090 2550</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-black/20">
+                        <p className="font-bold uppercase text-xs tracking-widest text-[#EFDC43]">In-Kind Donations</p>
+                        <p className="text-xs mt-1">Skyy House</p>
+                        <p className="text-xs">1920 West Fijai</p>
+                      </div>
+                    </div>
+                    <p className="text-xs mt-3 opacity-70">You may also contribute directly on Skyy FC home match days.</p>
+                  </div>
+
+                  <div className="my-6 p-4 md:p-6 rounded-xl bg-[#EFDC43]/10 border border-[#EFDC43]/20 text-center">
+                    <p className="text-sm font-bold uppercase tracking-widest text-[#EFDC43]">
+                      🎟️ FREE ENTRY FOR HOME FANS
+                    </p>
+                    <p className="text-sm mt-1">
+                      Thanks to our supporters, all Skyy FC Division One League home matches at St. Martin's Park are <strong className={isDarkMode ? 'text-white' : 'text-zinc-900'}>FREE</strong> for home fans. Seating protocols apply.
+                    </p>
+                  </div>
+
+                  <div className="text-center mt-8">
+                    <p className="text-lg font-black uppercase tracking-tight">
+                      Together, we can make history.
+                    </p>
+                    <p className="text-lg font-black uppercase tracking-tight">
+                      Together, we can take <span className="text-[#EFDC43]">Wassa East</span> to the Ghana Premier League.
+                    </p>
+                    <p className="text-xl font-black uppercase tracking-tight mt-2 text-[#EFDC43]">
+                      Together We Shine.
+                    </p>
+                    <p className="text-xs mt-4 opacity-60">SKYY FC — NO SIZE</p>
+                    <div className="flex items-center justify-center gap-4 mt-3 text-xs opacity-50">
+                      <span>www.skyyfc.com</span>
+                      <span>•</span>
+                      <span>Follow us on Facebook</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── Main Home Component ────────────────────────────────────────────────────
 export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [clubInfo, setClubInfo]          = useState<ClubInfo>({ tagline: 'Division One League' });
   const [stories, setStories]            = useState<StoryArticle[]>([]);
@@ -47,7 +184,6 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
   useEffect(() => {
     setClubInfo({ tagline: 'No Size!' });
 
-    // ✅ Updated to fetch "stories" (latest first)
     client
       .fetch(`*[_type == "stories"] | order(date desc)[0...12] {
         _id,
@@ -181,6 +317,9 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
           </motion.div>
         </div>
       </section>
+
+      {/* ── Campaign Section ── */}
+      <CampaignSection isDarkMode={isDarkMode} />
 
       {/* ── Partners Bar ── */}
       <PartnersBar isDarkMode={isDarkMode} />

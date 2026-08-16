@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { client } from '../lib/sanityClient';
-import { Radio, PlayCircle, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Radio, PlayCircle, Lock, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 interface LiveStream {
   isLive: boolean;
@@ -13,6 +13,7 @@ interface ReplayMatch {
   title: string;
   videoUrl: string;
   date?: string;
+  season?: string; // Add season field
 }
 
 const MATCHES_PER_PAGE = 5;
@@ -37,12 +38,50 @@ const formatDate = (dateStr?: string) => {
   return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
 };
 
+// Helper to get season from date
+const getSeasonFromDate = (dateStr?: string): string => {
+  if (!dateStr) return '2026/27'; // Default to current season
+  
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = d.getMonth(); // 0 = Jan, 11 = Dec
+  
+  // Season runs from August to July
+  // If month is August (7) or later, season is year/(year+1)
+  // Otherwise season is (year-1)/year
+  if (month >= 8) { // August-December
+    return `${year}/${year + 1}`;
+  } else { // January-July
+    return `${year - 1}/${year}`;
+  }
+};
+
 export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [stream, setStream] = useState<LiveStream | null>(null);
   const [replays, setReplays] = useState<ReplayMatch[]>([]);
   const [selectedReplayId, setSelectedReplayId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+  const [selectedSeason, setSelectedSeason] = useState<string>('2026/27'); // Default to current season
+
+  // Get unique seasons from matches
+  const availableSeasons = useMemo(() => {
+    const seasons = new Set(replays.map(m => m.season || getSeasonFromDate(m.date)));
+    return Array.from(seasons).sort((a, b) => {
+      // Sort by year descending (most recent first)
+      const yearA = parseInt(a.split('/')[0]);
+      const yearB = parseInt(b.split('/')[0]);
+      return yearB - yearA;
+    });
+  }, [replays]);
+
+  // Filter matches by selected season
+  const filteredReplays = useMemo(() => {
+    return replays.filter(m => {
+      const season = m.season || getSeasonFromDate(m.date);
+      return season === selectedSeason;
+    });
+  }, [replays, selectedSeason]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,7 +102,8 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
               _id,
               title,
               "videoUrl": videoUrl,
-              date
+              date,
+              season // Include season if you add it to Sanity
             }`
           ),
         ]);
@@ -73,9 +113,34 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
         setStream(live);
         setReplays(past ?? []);
 
-        // Auto-select latest replay ONLY if not live
+        // Auto-select latest replay for current season ONLY if not live
         if (!(live?.isLive) && (past?.length ?? 0) > 0) {
-          setSelectedReplayId(past[0]._id);
+          const currentSeason = '2026/27';
+          const currentSeasonMatches = past.filter(m => 
+            (m.season || getSeasonFromDate(m.date)) === currentSeason
+          );
+          
+          if (currentSeasonMatches.length > 0) {
+            setSelectedReplayId(currentSeasonMatches[0]._id);
+          } else {
+            // If no matches in current season, select from latest season
+            const seasons = new Set(past.map(m => m.season || getSeasonFromDate(m.date)));
+            const sortedSeasons = Array.from(seasons).sort((a, b) => {
+              const yearA = parseInt(a.split('/')[0]);
+              const yearB = parseInt(b.split('/')[0]);
+              return yearB - yearA;
+            });
+            
+            if (sortedSeasons.length > 0) {
+              const latestSeasonMatches = past.filter(m => 
+                (m.season || getSeasonFromDate(m.date)) === sortedSeasons[0]
+              );
+              if (latestSeasonMatches.length > 0) {
+                setSelectedReplayId(latestSeasonMatches[0]._id);
+                setSelectedSeason(sortedSeasons[0]);
+              }
+            }
+          }
         } else {
           setSelectedReplayId(null);
         }
@@ -92,11 +157,16 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
     };
   }, []);
 
+  // Reset page when season changes
+  useEffect(() => {
+    setPage(0);
+  }, [selectedSeason]);
+
   const isLive = !!stream?.isLive;
   const liveEmbedUrl = stream?.youtubeUrl ? getEmbedUrl(stream.youtubeUrl, true) : null;
 
-  const totalPages = Math.ceil(replays.length / MATCHES_PER_PAGE);
-  const pagedReplays = replays.slice(page * MATCHES_PER_PAGE, (page + 1) * MATCHES_PER_PAGE);
+  const totalPages = Math.ceil(filteredReplays.length / MATCHES_PER_PAGE);
+  const pagedReplays = filteredReplays.slice(page * MATCHES_PER_PAGE, (page + 1) * MATCHES_PER_PAGE);
 
   const selectedReplay = useMemo(
     () => replays.find((r) => r._id === selectedReplayId) ?? null,
@@ -111,7 +181,7 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
     // If selected replay is not on the new page, select the first on that page
-    const newPageReplays = replays.slice(newPage * MATCHES_PER_PAGE, (newPage + 1) * MATCHES_PER_PAGE);
+    const newPageReplays = filteredReplays.slice(newPage * MATCHES_PER_PAGE, (newPage + 1) * MATCHES_PER_PAGE);
     const stillVisible = newPageReplays.find((r) => r._id === selectedReplayId);
     if (!stillVisible && newPageReplays.length > 0) {
       setSelectedReplayId(newPageReplays[0]._id);
@@ -143,6 +213,27 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
             </span>
           )}
         </div>
+
+        {/* Season Tabs */}
+        {availableSeasons.length > 1 && !loading && (
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+            {availableSeasons.map(season => (
+              <button
+                key={season}
+                onClick={() => setSelectedSeason(season)}
+                className={`px-4 py-2 rounded-full text-sm font-black uppercase tracking-tight transition-all whitespace-nowrap
+                  ${selectedSeason === season 
+                    ? 'bg-[#EFDC43] text-black' 
+                    : isDarkMode 
+                      ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' 
+                      : 'bg-zinc-200 text-zinc-600 hover:bg-zinc-300'
+                  }`}
+              >
+                {season}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -186,18 +277,18 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
             <div className={`border rounded-2xl overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-white/10' : 'bg-white border-zinc-200 shadow-sm'}`}>
               <div className="bg-[#EFDC43] text-black px-4 py-3 font-black uppercase tracking-tighter text-sm flex items-center justify-between">
                 <span>Previous matches</span>
-                {isLive && (
-                  <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                    <Lock size={14} /> Locked
-                  </span>
-                )}
+                <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest">
+                  <Calendar size={12} /> {selectedSeason}
+                </span>
               </div>
 
               <div className="p-3">
                 {loading ? (
                   <p className={`text-sm p-3 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Loading matches...</p>
-                ) : replays.length === 0 ? (
-                  <p className={`text-sm p-3 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>No previous matches yet.</p>
+                ) : filteredReplays.length === 0 ? (
+                  <p className={`text-sm p-3 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                    No matches available for {selectedSeason} season.
+                  </p>
                 ) : (
                   <>
                     <div className="space-y-2">
