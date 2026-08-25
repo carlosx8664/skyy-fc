@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Newspaper, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Newspaper, ChevronLeft, ChevronRight, Trophy, Award, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { client } from '../lib/sanityClient';
 import { Sidebar } from '../components/Sidebar';
@@ -165,6 +165,106 @@ const CampaignSection = ({ isDarkMode }: { isDarkMode: boolean }) => {
   );
 };
 
+// ─── Achievements Section ──────────────────────────────────────────────────────
+const AchievementsSection = ({ isDarkMode }: { isDarkMode: boolean }) => {
+  const achievements = [
+    {
+      icon: <Trophy className="w-6 h-6 text-[#EFDC43]" />,
+      title: "2016/17 DOL Qualification",
+      description: "Qualified to DOL in 2016/2017 season unbeaten all season in maiden participation"
+    },
+    {
+      icon: <Trophy className="w-6 h-6 text-[#EFDC43]" />,
+      title: "2022 DOL Super Cup Winner",
+      description: "Champions of the DOL Super Cup in 2022"
+    },
+    {
+      icon: <Award className="w-6 h-6 text-[#EFDC43]" />,
+      title: "2024 DOL Super Cup Finalist",
+      description: "Reached the DOL Super Cup Final in 2024"
+    },
+    {
+      icon: <Trophy className="w-6 h-6 text-[#EFDC43]" />,
+      title: "2021 DOL Zone 2B Winner",
+      description: "Won DOL Zone 2B novelty league Cup in 2021"
+    },
+    {
+      icon: <Award className="w-6 h-6 text-[#EFDC43]" />,
+      title: "MTN FA Cup Achievements",
+      description: "Placed 2nd twice, 3rd, semi-finals, quarter-finals, and R32 & R64 twice"
+    }
+  ];
+
+  return (
+    <section className={`py-16 md:py-20 ${isDarkMode ? 'bg-zinc-900/30' : 'bg-zinc-50/50'}`}>
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <div className="text-center mb-12">
+          <span className="text-xs font-bold tracking-[0.3em] uppercase text-[#EFDC43] block mb-3">
+            A Decade of Excellence
+          </span>
+          <h2 className={`text-3xl md:text-5xl font-black tracking-tight uppercase
+            ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+            Skyy FC <span className="text-[#EFDC43]">2016-2026</span>
+          </h2>
+          <p className={`text-sm mt-3 max-w-2xl mx-auto ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+            A Decade of Solid Track Record — Building a legacy of excellence in Ghanaian football
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {achievements.map((achievement, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              className={`p-6 rounded-xl border transition-all duration-300 hover:scale-[1.02] hover:border-[#EFDC43]
+                ${isDarkMode 
+                  ? 'bg-zinc-900/50 border-white/10 hover:bg-zinc-800/50' 
+                  : 'bg-white border-zinc-200 hover:shadow-lg'}`}
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 p-2 rounded-lg bg-[#EFDC43]/10">
+                  {achievement.icon}
+                </div>
+                <div>
+                  <h3 className={`font-bold text-sm uppercase tracking-wider mb-1
+                    ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                    {achievement.title}
+                  </h3>
+                  <p className={`text-xs ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                    {achievement.description}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Legacy Statement */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5 }}
+          className={`mt-10 p-6 md:p-8 rounded-xl text-center border-2 border-[#EFDC43]/20
+            ${isDarkMode ? 'bg-zinc-900/30' : 'bg-white'}`}
+        >
+          <Star className="w-8 h-8 text-[#EFDC43] mx-auto mb-3" />
+          <p className={`text-lg md:text-xl font-bold uppercase tracking-tight
+            ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+            Skyy FC is undoubtedly the most respected DOLC in Ghana today
+          </p>
+          <p className={`text-xs mt-2 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+            Building on a decade of excellence, integrity, and competitive football
+          </p>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
 // ─── Main Home Component ────────────────────────────────────────────────────
 export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [clubInfo, setClubInfo]          = useState<ClubInfo>({ tagline: 'Division One League' });
@@ -281,30 +381,34 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
           >
             <span className="text-xs font-bold tracking-[0.3em] uppercase mb-4 block"
               style={{ color: '#EFDC43' }}>
-              SKYY FC 2026
+              SKYY FC 2016-2026
             </span>
 
-            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter uppercase
-              leading-none text-white drop-shadow-lg mb-6">
-              The Season<br />
-              <span style={{ color: '#EFDC43' }}>In Motion</span>
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-tighter uppercase
+              leading-tight text-white drop-shadow-lg mb-6">
+              A Decade of<br />
+              <span style={{ color: '#EFDC43' }}>Solid Track Record</span>
             </h1>
 
-            <p className="text-base md:text-lg text-white/70 mb-2">Results. Momentum. Moments.</p>
-            <p className="text-sm text-white/50 mb-8 md:mb-10">"{clubInfo.tagline}"</p>
+            <p className="text-sm md:text-base text-white/70 mb-2">
+              Qualified to DOL in 2016/2017 season unbeaten all season in maiden participation
+            </p>
+            <p className="text-xs md:text-sm text-white/50 mb-8 md:mb-10">
+              🏆 2022 DOL Super Cup Winner • 2024 DOL Super Cup Finalist • 2021 Zone 2B Winner
+            </p>
 
-            <ul className="flex gap-8 md:gap-10">
+            <div className="flex flex-wrap gap-4 md:gap-6">
               {[
-                { value: '7',  label: 'Wins' },
-                { value: '28', label: 'Goals' },
-                { value: '32', label: 'Players' },
+                { value: '🏆', label: '2022 Super Cup Winners' },
+                { value: '🏅', label: 'FA Cup Achievements' },
+                { value: '⭐', label: 'Most Respected DOLC' },
               ].map(({ value, label }) => (
-                <li key={label} className="flex flex-col">
-                  <strong className="text-3xl md:text-4xl font-black text-white">{value}</strong>
-                  <span className="text-xs uppercase tracking-widest text-white/50">{label}</span>
-                </li>
+                <div key={label} className="flex items-center gap-2">
+                  <span className="text-xl">{value}</span>
+                  <span className="text-xs font-bold text-white/80 uppercase tracking-wider">{label}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </motion.div>
 
           <motion.div
@@ -317,6 +421,9 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
           </motion.div>
         </div>
       </section>
+
+      {/* ── Achievements Section ── */}
+      <AchievementsSection isDarkMode={isDarkMode} />
 
       {/* ── Campaign Section ── */}
       <CampaignSection isDarkMode={isDarkMode} />

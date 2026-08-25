@@ -1,6 +1,6 @@
 import React from 'react';
-import homeJersey from '../assets/home jersey.png';
-import awayJersey from '../assets/away jersey.png';
+import homeJersey from '../assets/homie.jpeg';
+import awayJersey from '../assets/awayie.jpeg';
 
 const products = [
   {
