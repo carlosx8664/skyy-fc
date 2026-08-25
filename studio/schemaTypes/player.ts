@@ -53,6 +53,28 @@ export default defineType({
         defineField({ name: 'conceded', title: 'Goals Conceded (GK only)', type: 'string' }),
       ],
     }),
+    // NEW: Season field
+    defineField({
+      name: 'season',
+      title: 'Season',
+      type: 'string',
+      options: {
+        list: [
+          { title: '2024/25', value: '2024/25' },
+          { title: '2025/26', value: '2025/26' },
+          { title: '2026/27', value: '2026/27' },
+        ],
+      },
+      validation: Rule => Rule.required()
+    }),
+    // NEW: Archive flag
+    defineField({
+      name: 'isArchived',
+      title: 'Archived',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Mark as archived (hidden from active squad)'
+    }),
   ],
   preview: {
     select: { title: 'name', subtitle: 'position', media: 'image' },

@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { client } from '../lib/sanityClient';
 import imageUrlBuilder from '@sanity/image-url';
+import { SquadSeasonSelector } from '../components/SquadSeasonSelector';
+import { getSquadBySeason, getAvailableSeasons } from '../lib/squadUtils';
 
 const builder = imageUrlBuilder(client);
 const urlFor = (source: any) => builder.image(source).width(600).url();
@@ -43,25 +45,62 @@ const FILTERS_FULL = [
 export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter]   = useState('all');
+  const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState<Player | null>(null);
+  
+  // Season management state
+  const [currentSeason, setCurrentSeason] = useState('2026/27'); // Default to new season
+  const [availableSeasons, setAvailableSeasons] = useState<string[]>([]);
 
+  // Fetch players based on selected season
   useEffect(() => {
-    client
-      .fetch(`*[_type == "player"] | order(number asc) {
-        _id, name, number, position, role, foot,
-        isCaptain, debut, home, tags, bio, category, image, stats
-      }`)
-      .then((data: Player[]) => {
+    const fetchSquad = async () => {
+      setLoading(true);
+      try {
+        // Get available seasons first
+        const seasons = await getAvailableSeasons();
+        setAvailableSeasons(seasons);
+        
+        // Default to 2026/27 if available, otherwise use the first available season
+        const seasonToUse = seasons.includes('2026/27') 
+          ? '2026/27' 
+          : seasons[0] || '2025/26';
+        
+        setCurrentSeason(seasonToUse);
+        
+        // Fetch players for the selected season
+        const data = await getSquadBySeason(seasonToUse);
         setPlayers(data);
+      } catch (error) {
+        console.error('Error fetching squad:', error);
+        setPlayers([]);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+      }
+    };
 
+    fetchSquad();
+  }, []); // Only run once on mount
+
+  // Handle season change
+  const handleSeasonChange = (season: string) => {
+    if (season !== currentSeason) {
+      setCurrentSeason(season);
+      setFilter('all'); // Reset filter when changing seasons
+      
+      // Fetch players for the new season
+      getSquadBySeason(season)
+        .then(data => setPlayers(data))
+        .catch(error => console.error('Error fetching season:', error));
+    }
+  };
+
+  // Handle keyboard escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelected(null);
+      if (e.key === 'Escape') {
+        setSelected(null);
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -90,21 +129,35 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
     <div className={`pt-6 pb-24 ${isDarkMode ? 'bg-zinc-950' : 'bg-zinc-50'}`}>
 
       {/* ── Header ── */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 mb-8 md:mb-10
-        flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
-        <div>
-          <h2 className={`text-4xl md:text-5xl font-black tracking-tight
-            ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-            Our Squad
-          </h2>
-          <p className="text-xs font-bold tracking-[0.25em] uppercase mt-2"
-            style={{ color: '#EFDC43' }}>
-            Pick a name. See the story.
-          </p>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 mb-8 md:mb-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+          <div>
+            <h2 className={`text-4xl md:text-5xl font-black tracking-tight
+              ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+              Our Squad
+            </h2>
+            <p className="text-xs font-bold tracking-[0.25em] uppercase mt-2"
+              style={{ color: '#EFDC43' }}>
+              Pick a name. See the story.
+            </p>
+            <p className={`text-xs mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+              Season: {currentSeason} • {players.length} players
+            </p>
+          </div>
+
+          {/* Season selector only */}
+          <div className="flex flex-wrap items-center gap-3">
+            <SquadSeasonSelector
+              currentSeason={currentSeason}
+              onSeasonChange={handleSeasonChange}
+              isDarkMode={isDarkMode}
+              availableSeasons={availableSeasons}
+            />
+          </div>
         </div>
 
-        {/* Mobile: abbreviated labels; Desktop: full labels */}
-        <div className="flex flex-wrap gap-2">
+        {/* Filter buttons - moved below header */}
+        <div className="mt-6 flex flex-wrap gap-2">
           {/* Mobile filters */}
           <div className="flex gap-2 md:hidden">
             {FILTERS.map(f => (
@@ -210,10 +263,14 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
         </AnimatePresence>
 
         {filtered.length === 0 && (
-          <p className={`py-20 text-sm opacity-40 text-center
-            ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-            No players in this category yet.
-          </p>
+          <div className={`py-20 text-center ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+            <p className="text-sm opacity-40">
+              No players in this category yet.
+            </p>
+            <p className={`text-xs mt-2 opacity-30 ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+              Season: {currentSeason}
+            </p>
+          </div>
         )}
       </div>
 
@@ -281,7 +338,7 @@ export const Squad = ({ isDarkMode }: { isDarkMode: boolean }) => {
                   <span className={`text-xs font-bold tracking-[0.3em] uppercase
                     opacity-40 block mb-2
                     ${isDarkMode ? 'text-white' : 'text-black'}`}>
-                    First Team
+                    {currentSeason} • First Team
                   </span>
 
                   <h2 className={`text-3xl md:text-4xl font-black leading-tight mb-1
