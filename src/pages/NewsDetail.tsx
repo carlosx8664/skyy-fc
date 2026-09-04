@@ -5,6 +5,7 @@ import { ChevronLeft, Send, MessageCircle } from 'lucide-react';
 import { client } from '../lib/sanityClient';
 import { Sidebar } from '../components/Sidebar';
 import { PortableText } from '@portabletext/react';
+import imageUrlBuilder from '@sanity/image-url';
 
 interface Comment {
   id: string;
@@ -19,7 +20,7 @@ interface Article {
   date: string;
   excerpt: string;
   author?: string;
-  image?: string;
+  image?: any; // Full Sanity image object
   showCoverImage?: boolean;
   body?: any;
 }
@@ -30,6 +31,14 @@ const formatDate = (dateStr: string) =>
     month: 'long',
     year: 'numeric',
   }).toUpperCase();
+
+// Initialize the image builder
+const builder = imageUrlBuilder(client);
+
+// Helper function to generate image URLs
+function urlFor(source: any) {
+  return builder.image(source);
+}
 
 export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const { id } = useParams<{ id: string }>();
@@ -52,7 +61,7 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
           author,
           showCoverImage,
           body,
-          "image": image.asset->url
+          image  // Fetch the full image object
         }`,
         { id }
       )
@@ -158,9 +167,9 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
               className="mb-8"
             >
               <img
-                src={article.image}
+                src={urlFor(article.image).width(1200).fit('max').url()}
                 alt={article.title}
-                className={`w-full max-h-[500px] object-cover rounded-sm border
+                className={`w-full max-h-[500px] object-contain rounded-sm border
                   ${
                     isDarkMode
                       ? 'border-white/10'
