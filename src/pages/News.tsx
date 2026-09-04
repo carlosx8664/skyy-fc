@@ -4,12 +4,13 @@ import { Newspaper, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { client } from '../lib/sanityClient';
 import { Sidebar } from '../components/Sidebar';
+import imageUrlBuilder from '@sanity/image-url';
 
 interface NewsArticle {
   _id: string;
   title: string;
   date: string;
-  image?: string;
+  image?: any; // Full Sanity image object
 }
 
 const fallbackColors = [
@@ -21,6 +22,14 @@ const fallbackColors = [
 
 const ARTICLES_PER_PAGE = 6;
 
+// Initialize the image builder
+const builder = imageUrlBuilder(client);
+
+// Helper function to generate image URLs
+function urlFor(source: any) {
+  return builder.image(source);
+}
+
 export const News = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +40,7 @@ export const News = ({ isDarkMode }: { isDarkMode: boolean }) => {
       .fetch(
         `*[_type == "stories"] | order(date desc) {
           _id, title, date,
-          "image": image.asset->url
+          image  // Fetch the full image object
         }`
       )
       .then((data: NewsArticle[]) => {
@@ -117,9 +126,9 @@ export const News = ({ isDarkMode }: { isDarkMode: boolean }) => {
                   <div className="h-48 overflow-hidden">
                     {article.image ? (
                       <img
-                        src={article.image}
+                        src={urlFor(article.image).width(600).height(300).fit('max').url()}
                         alt={article.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
                       <div className={`w-full h-full ${fallbackColors[index % fallbackColors.length]}`} />
