@@ -5,19 +5,19 @@ import awayJersey from '../assets/awayie.jpeg';
 const products = [
   {
     name: 'Home Jersey',
-    price: 'GHC 100',
+    price: 'GHC 150',
     img: homeJersey,
     waMsg: 'Hello%2C%20I%20would%20like%20to%20buy%20a%20Home%20Jersey%2025/26'
   },
   {
     name: 'Away Jersey',
-    price: 'GHC 100',
+    price: 'GHC 150',
     img: awayJersey,
     waMsg: 'Hello%2C%20I%20would%20like%20to%20buy%20an%20Away%20Jersey%2025/26'
   },
   {
     name: 'Signed Jersey',
-    price: 'GHC 129',
+    price: 'GHC 200',
     img: homeJersey,
     waMsg: 'Hello%2C%20I%20would%20like%20to%20buy%20a%20Signed%20Jersey',
     highlight: true
