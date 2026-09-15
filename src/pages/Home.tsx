@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { ArrowRight, Newspaper, ChevronLeft, ChevronRight, Trophy, Award, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { client } from '../lib/sanityClient';
@@ -16,6 +16,13 @@ import hero3 from '../assets/hero3.jpg';
 const HERO_IMAGES = [hero1, hero2, hero3];
 const SLIDE_INTERVAL = 5000;
 const NEWS_PER_PAGE = 4;
+
+// Preload hero images once at module load so the first slide transition
+// never flashes while an image decodes.
+HERO_IMAGES.forEach((src) => {
+  const img = new Image();
+  img.src = src;
+});
 
 interface ClubInfo {
   tagline: string;
@@ -334,22 +341,22 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
       {/* ── Hero Section with MatchPanel overlay ── */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
 
-        <AnimatePresence>
-          <motion.div
-            key={currentSlide}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.2, ease: 'easeInOut' }}
-            className="absolute inset-0 z-0"
+        {/* Stacked hero images — all mounted, only one visible.
+            Prevents flicker that AnimatePresence mount/unmount caused. */}
+        {HERO_IMAGES.map((img, i) => (
+          <div
+            key={i}
+            className="absolute inset-0 z-0 transition-opacity duration-[1200ms] ease-in-out"
             style={{
-              backgroundImage: `url(${HERO_IMAGES[currentSlide]})`,
+              backgroundImage: `url(${img})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center top',
               backgroundRepeat: 'no-repeat',
+              opacity: i === currentSlide ? 1 : 0,
+              willChange: 'opacity',
             }}
           />
-        </AnimatePresence>
+        ))}
 
         <div className="absolute inset-0 z-10 bg-black/60" />
 
