@@ -7,6 +7,7 @@ import { Sidebar } from '../components/Sidebar';
 import { MatchPanel } from '../components/MatchPanel';
 import { PartnersBar } from '../components/PartnersBar';
 import { Store } from '../components/Store';
+import { MatchPopup } from '../components/MatchPopup';
 
 import hero1 from '../assets/hero1.jpg';
 import hero2 from '../assets/hero2.jpg';
@@ -326,6 +327,9 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   return (
     <div className="pt-16 md:pt-20">
+
+      {/* ── Match Popup (Home only) ── */}
+      <MatchPopup isDarkMode={isDarkMode} />
 
       {/* ── Hero Section with MatchPanel overlay ── */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
