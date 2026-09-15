@@ -3,7 +3,7 @@ import liveStream from './liveStream'
 import team from './team'
 import news from './news'
 import stories from './stories'
-import leagueTable from './leagueTable'
+// import leagueTable from './leagueTable'
 import gallery from './gallery'
 import highlight from './highlight'
 import fixture from './fixture'
@@ -21,7 +21,7 @@ export const schemaTypes = [
   stories,
   fixture,
   result,
-  leagueTable,
+  // leagueTable,
   gallery,
   highlight,
 ]

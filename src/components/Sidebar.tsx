@@ -6,6 +6,9 @@ import imageUrlBuilder from '@sanity/image-url';
 const builder = imageUrlBuilder(client);
 const urlFor = (source: any) => builder.image(source).width(96).height(96).url();
 
+// ── Change this if your Skyy FC team is named differently in Sanity ──
+const SKYY_TEAM_NAME = 'Skyy FC';
+
 interface Team {
   name: string;
   shortName?: string;
@@ -22,16 +25,29 @@ interface LatestResult {
   outcome: 'win' | 'draw' | 'loss';
 }
 
-interface LeagueTable {
+interface RawResult {
   _id: string;
-  position: number;
+  homeTeamId: string;
+  homeTeamName: string;
+  awayTeamId: string;
+  awayTeamName: string;
+  homeScore: number;
+  awayScore: number;
+}
+
+interface StandingRow {
+  teamId: string;
   team: string;
   played: number;
   won: number;
   drawn: number;
   lost: number;
+  gf: number;
+  ga: number;
+  gd: number;
   points: number;
   isSkyy: boolean;
+  position: number;
 }
 
 const SidebarHeader = ({ title }: { title: string }) => (
@@ -62,10 +78,71 @@ const outcomeColor = (outcome: string) => {
   return 'bg-zinc-500';
 };
 
+// ─── Compute standings from raw results ──────────────────────────────────────
+const computeStandings = (results: RawResult[]): StandingRow[] => {
+  const table = new Map<string, Omit<StandingRow, 'position' | 'isSkyy' | 'gd'>>();
+
+  const ensure = (id: string, name: string) => {
+    if (!table.has(id)) {
+      table.set(id, {
+        teamId: id,
+        team: name,
+        played: 0,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        gf: 0,
+        ga: 0,
+        points: 0,
+      });
+    }
+    return table.get(id)!;
+  };
+
+  for (const r of results) {
+    if (
+      r.homeScore == null || r.awayScore == null ||
+      !r.homeTeamId || !r.awayTeamId
+    ) continue;
+
+    const home = ensure(r.homeTeamId, r.homeTeamName);
+    const away = ensure(r.awayTeamId, r.awayTeamName);
+
+    home.played++;  away.played++;
+    home.gf += r.homeScore;  home.ga += r.awayScore;
+    away.gf += r.awayScore;  away.ga += r.homeScore;
+
+    if (r.homeScore > r.awayScore) {
+      home.won++;  home.points += 3;
+      away.lost++;
+    } else if (r.homeScore < r.awayScore) {
+      away.won++;  away.points += 3;
+      home.lost++;
+    } else {
+      home.drawn++;  home.points += 1;
+      away.drawn++;  away.points += 1;
+    }
+  }
+
+  return [...table.values()]
+    .map((row) => ({
+      ...row,
+      gd: row.gf - row.ga,
+      isSkyy: row.team.trim().toLowerCase() === SKYY_TEAM_NAME.toLowerCase(),
+    }))
+    .sort((a, b) =>
+      b.points - a.points ||
+      b.gd - a.gd ||
+      b.gf - a.gf ||
+      a.team.localeCompare(b.team)
+    )
+    .map((row, i) => ({ ...row, position: i + 1 }));
+};
+
 export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [latestResult, setLatestResult] = useState<LatestResult | null>(null);
-  const [standings, setStandings] = useState<LeagueTable[]>([]);
-  const [loading, setLoading]       = useState(true);
+  const [standings, setStandings]       = useState<StandingRow[]>([]);
+  const [loading, setLoading]           = useState(true);
 
   const today = new Date();
   const [calendarDate, setCalendarDate] = useState(
@@ -73,9 +150,13 @@ export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
   );
 
   useEffect(() => {
+    // ── Latest result — ONLY Skyy FC matches ──
     client
       .fetch<LatestResult | null>(
-        `*[_type == "result"] | order(date desc)[0] {
+        `*[
+          _type == "result"
+          && (homeTeam->name match "Skyy*" || awayTeam->name match "Skyy*")
+        ] | order(date desc)[0] {
           _id, homeScore, awayScore, date, outcome,
           homeTeam-> { name, shortName, logo },
           awayTeam-> { name, shortName, logo }
@@ -84,17 +165,27 @@ export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
       .then((data) => { if (data) setLatestResult(data); })
       .catch((err) => console.error('❌ Result error:', err));
 
+    // ── Standings — ALL results in the league ──
     client
-      .fetch<LeagueTable[]>(
-        `*[_type == "leagueTable"] | order(position asc) {
-          _id, position, "team": team->name, played, won, drawn, lost, points, isSkyy
+      .fetch<RawResult[]>(
+        `*[_type == "result" && defined(homeScore) && defined(awayScore)] {
+          _id,
+          homeScore,
+          awayScore,
+          "homeTeamId":   homeTeam->_id,
+          "homeTeamName": homeTeam->name,
+          "awayTeamId":   awayTeam->_id,
+          "awayTeamName": awayTeam->name
         }`
       )
       .then((data) => {
-        if (data) setStandings(data);
+        setStandings(computeStandings(data ?? []));
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error('❌ Standings error:', err);
+        setLoading(false);
+      });
   }, []);
 
   const formatDate = (dateStr: string) => {
@@ -107,13 +198,12 @@ export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   const calYear  = calendarDate.getFullYear();
   const calMonth = calendarDate.getMonth();
-  const daysInMonth   = new Date(calYear, calMonth + 1, 0).getDate();
+  const daysInMonth    = new Date(calYear, calMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay();
   const prevMonth = () => setCalendarDate(new Date(calYear, calMonth - 1, 1));
   const nextMonth = () => setCalendarDate(new Date(calYear, calMonth + 1, 1));
   const isToday = (day: number) =>
     day === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
-
 
   return (
     <aside className="space-y-8">
@@ -161,40 +251,50 @@ export const Sidebar = ({ isDarkMode }: { isDarkMode: boolean }) => {
         </div>
       </div>
 
-      {/* ── Standings ── */}
+      {/* ── Standings (auto-computed from results) ── */}
       <div id="standings" className={`border rounded-sm overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'}`}>
-        <SidebarHeader title="2025/26 Standings" />
+        <SidebarHeader title="2026/27 Standings" />
         <div className="p-0">
           {loading ? (
             <div className="p-6 text-center">
               <p className="text-zinc-500 text-sm animate-pulse">Loading standings...</p>
             </div>
+          ) : standings.length === 0 ? (
+            <div className="p-6 text-center">
+              <p className="text-zinc-500 text-sm">No results recorded yet</p>
+            </div>
           ) : (
-            <div>
+            <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className={`sticky top-0 uppercase font-bold ${isDarkMode ? 'bg-zinc-900 text-zinc-500' : 'bg-white text-zinc-400'}`}>
                   <tr>
                     <th className="px-3 py-2">Pos</th>
                     <th className="px-3 py-2">Club</th>
+                    <th className="px-2 py-2 text-center">P</th>
                     <th className="px-2 py-2 text-center">W</th>
                     <th className="px-2 py-2 text-center">D</th>
                     <th className="px-2 py-2 text-center">L</th>
+                    <th className="px-2 py-2 text-center">GD</th>
                     <th className="px-3 py-2 text-right">Pts</th>
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${isDarkMode ? 'divide-white/5' : 'divide-zinc-100'}`}>
                   {standings.map((row) => (
                     <tr
-                      key={row._id}
+                      key={row.teamId}
                       className={row.isSkyy ? (isDarkMode ? 'bg-[#EFDC43]/10' : 'bg-[#EFDC43]/5') : ''}
                     >
                       <td className="px-3 py-3 font-bold text-zinc-400">{row.position}</td>
-                      <td className={`px-3 py-3 font-bold ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                      <td className={`px-3 py-3 font-bold whitespace-nowrap ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
                         {row.team}
                       </td>
+                      <td className="px-2 py-3 text-center text-zinc-400">{row.played}</td>
                       <td className="px-2 py-3 text-center text-zinc-400">{row.won}</td>
                       <td className="px-2 py-3 text-center text-zinc-400">{row.drawn}</td>
                       <td className="px-2 py-3 text-center text-zinc-400">{row.lost}</td>
+                      <td className="px-2 py-3 text-center text-zinc-400">
+                        {row.gd > 0 ? `+${row.gd}` : row.gd}
+                      </td>
                       <td className="px-3 py-3 text-right font-black text-[#EFDC43]">{row.points}</td>
                     </tr>
                   ))}
