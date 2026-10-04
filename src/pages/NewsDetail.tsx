@@ -17,7 +17,7 @@ interface Comment {
 interface Article {
   _id: string;
   title: string;
-  slug?: string;      // 👈 added
+  slug?: string;
   date: string;
   excerpt: string;
   author?: string;
@@ -78,8 +78,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
   useEffect(() => {
     if (!id) return;
 
-    // If the URL param is a UUID → fetch by _id (legacy links).
-    // Otherwise → fetch by slug.current (new links).
     const legacy = isUUID(id);
 
     const query = legacy
@@ -101,8 +99,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
           return;
         }
 
-        // If we hit a legacy UUID URL and the story has a slug, silently
-        // rewrite the URL bar to the new one.
         if (legacy && data.slug) {
           navigate(`/news/${data.slug}`, { replace: true });
         }
@@ -110,7 +106,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
         setArticle(data);
         setLoading(false);
 
-        // SEO meta
         if (data.title) {
           setMeta(
             `${data.title} | SKYY FC`,
@@ -122,13 +117,8 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
         console.error('❌ Story fetch error:', err);
         setLoading(false);
       });
-
-    // Load comments using the story _id as key so both old and new URLs
-    // share the same comment thread.
-    // (We'll re-fetch them once the article loads, using its _id.)
   }, [id, navigate]);
 
-  // Load comments whenever the article's _id is known
   useEffect(() => {
     if (!article?._id) return;
     const saved = localStorage.getItem(`comments-${article._id}`);
@@ -251,11 +241,117 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className={`prose max-w-none mb-10 ${
-                isDarkMode ? 'prose-invert' : ''
-              }`}
+              className="max-w-none mb-10"
             >
-              <PortableText value={article.body} />
+              <PortableText
+                value={article.body}
+                components={{
+                  block: {
+                    normal: ({ children }) => (
+                      <p
+                        className={`mb-5 leading-relaxed ${
+                          isDarkMode ? 'text-zinc-300' : 'text-zinc-700'
+                        }`}
+                      >
+                        {children}
+                      </p>
+                    ),
+                    h1: ({ children }) => (
+                      <h1
+                        className={`text-3xl font-black uppercase tracking-tight mt-10 mb-4 ${
+                          isDarkMode ? 'text-white' : 'text-zinc-900'
+                        }`}
+                      >
+                        {children}
+                      </h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2
+                        className={`text-2xl font-black uppercase tracking-tight mt-10 mb-4 ${
+                          isDarkMode ? 'text-white' : 'text-zinc-900'
+                        }`}
+                      >
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3
+                        className={`text-xl font-bold uppercase tracking-tight mt-8 mb-3 ${
+                          isDarkMode ? 'text-white' : 'text-zinc-900'
+                        }`}
+                      >
+                        {children}
+                      </h3>
+                    ),
+                    h4: ({ children }) => (
+                      <h4
+                        className={`text-lg font-bold mt-6 mb-2 ${
+                          isDarkMode ? 'text-white' : 'text-zinc-900'
+                        }`}
+                      >
+                        {children}
+                      </h4>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote
+                        className={`border-l-4 border-[#EFDC43] pl-4 italic my-6 ${
+                          isDarkMode ? 'text-zinc-400' : 'text-zinc-600'
+                        }`}
+                      >
+                        {children}
+                      </blockquote>
+                    ),
+                  },
+                  list: {
+                    bullet: ({ children }) => (
+                      <ul
+                        className={`list-disc pl-6 mb-5 space-y-2 ${
+                          isDarkMode ? 'text-zinc-300' : 'text-zinc-700'
+                        }`}
+                      >
+                        {children}
+                      </ul>
+                    ),
+                    number: ({ children }) => (
+                      <ol
+                        className={`list-decimal pl-6 mb-5 space-y-2 ${
+                          isDarkMode ? 'text-zinc-300' : 'text-zinc-700'
+                        }`}
+                      >
+                        {children}
+                      </ol>
+                    ),
+                  },
+                  listItem: {
+                    bullet: ({ children }) => <li>{children}</li>,
+                    number: ({ children }) => <li>{children}</li>,
+                  },
+                  marks: {
+                    strong: ({ children }) => (
+                      <strong
+                        className={`font-bold ${
+                          isDarkMode ? 'text-white' : 'text-zinc-900'
+                        }`}
+                      >
+                        {children}
+                      </strong>
+                    ),
+                    em: ({ children }) => (
+                      <em className="italic">{children}</em>
+                    ),
+                    link: ({ value, children }) => (
+                      <a
+                        href={value?.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#EFDC43] underline hover:opacity-80 transition-opacity"
+                      >
+                        {children}
+                      </a>
+                    ),
+                  },
+                }}
+              />
             </motion.div>
           )}
 
