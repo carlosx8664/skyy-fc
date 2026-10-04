@@ -31,6 +31,7 @@ interface ClubInfo {
 interface StoryArticle {
   _id: string;
   title: string;
+  slug?: string;
   date: string;
   excerpt: string;
   image?: string;
@@ -296,6 +297,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
       .fetch(`*[_type == "stories"] | order(date desc)[0...12] {
         _id,
         title,
+        "slug": slug.current,
         date,
         excerpt,
         "image": image.asset->url,
@@ -479,7 +481,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
               >
                 {/* Thumbnail */}
                 <Link
-                  to={`/news/${story._id}`}
+                  to={`/news/${story.slug ?? story._id}`}
                   className={`w-full sm:w-52 md:w-64 h-44 md:h-48 flex-shrink-0 rounded-sm overflow-hidden border relative
                     ${isDarkMode ? 'border-white/10' : 'border-zinc-200'}`}
                 >
@@ -500,7 +502,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
                   <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
                     {formatDate(story.date)}
                   </p>
-                  <Link to={`/news/${story._id}`}>
+                  <Link to={`/news/${story.slug ?? story._id}`}>
                     <h3 className={`text-2xl md:text-3xl font-black uppercase tracking-tight leading-none
                       group-hover:text-[#EFDC43] transition-colors
                       ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
@@ -508,7 +510,7 @@ export const Home = ({ isDarkMode }: { isDarkMode: boolean }) => {
                     </h3>
                   </Link>
                   <Link
-                    to={`/news/${story._id}`}
+                    to={`/news/${story.slug ?? story._id}`}
                     className="text-sm font-bold text-[#EFDC43] hover:opacity-80
                       transition-opacity flex items-center gap-1 mt-1 md:mt-2"
                   >

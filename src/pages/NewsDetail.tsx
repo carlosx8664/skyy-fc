@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ChevronLeft, Send, MessageCircle } from 'lucide-react';
 import { client } from '../lib/sanityClient';
@@ -17,10 +17,11 @@ interface Comment {
 interface Article {
   _id: string;
   title: string;
+  slug?: string;      // 👈 added
   date: string;
   excerpt: string;
   author?: string;
-  image?: any; // Full Sanity image object
+  image?: any;
   showCoverImage?: boolean;
   body?: any;
 }
@@ -32,16 +33,42 @@ const formatDate = (dateStr: string) =>
     year: 'numeric',
   }).toUpperCase();
 
-// Initialize the image builder
 const builder = imageUrlBuilder(client);
-
-// Helper function to generate image URLs
 function urlFor(source: any) {
   return builder.image(source);
 }
 
+// Detects old-style Sanity UUIDs (a51af50e-8c72-414f-8f87-11fcbc8d9226)
+const isUUID = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
+// Set the document title for SEO + share previews
+const setMeta = (title: string, description: string) => {
+  document.title = title;
+
+  const setTag = (attr: 'name' | 'property', key: string, content: string) => {
+    let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute(attr, key);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', content);
+  };
+
+  setTag('name', 'description', description);
+  setTag('property', 'og:title', title);
+  setTag('property', 'og:description', description);
+  setTag('property', 'og:type', 'article');
+  setTag('property', 'og:url', window.location.href);
+  setTag('name', 'twitter:card', 'summary_large_image');
+  setTag('name', 'twitter:title', title);
+  setTag('name', 'twitter:description', description);
+};
+
 export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -51,36 +78,66 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
   useEffect(() => {
     if (!id) return;
 
+    // If the URL param is a UUID → fetch by _id (legacy links).
+    // Otherwise → fetch by slug.current (new links).
+    const legacy = isUUID(id);
+
+    const query = legacy
+      ? `*[_type == "stories" && _id == $value][0]{
+          _id, title, "slug": slug.current, date, excerpt, author,
+          showCoverImage, body, image
+        }`
+      : `*[_type == "stories" && slug.current == $value][0]{
+          _id, title, "slug": slug.current, date, excerpt, author,
+          showCoverImage, body, image
+        }`;
+
     client
-      .fetch(
-        `*[_type == "stories" && _id == $id][0]{
-          _id,
-          title,
-          date,
-          excerpt,
-          author,
-          showCoverImage,
-          body,
-          image  // Fetch the full image object
-        }`,
-        { id }
-      )
+      .fetch(query, { value: id })
       .then((data: Article | null) => {
+        if (!data) {
+          setArticle(null);
+          setLoading(false);
+          return;
+        }
+
+        // If we hit a legacy UUID URL and the story has a slug, silently
+        // rewrite the URL bar to the new one.
+        if (legacy && data.slug) {
+          navigate(`/news/${data.slug}`, { replace: true });
+        }
+
         setArticle(data);
         setLoading(false);
+
+        // SEO meta
+        if (data.title) {
+          setMeta(
+            `${data.title} | SKYY FC`,
+            data.excerpt || `${data.title} — Skyy FC news`
+          );
+        }
       })
       .catch((err) => {
         console.error('❌ Story fetch error:', err);
         setLoading(false);
       });
 
-    const saved = localStorage.getItem(`comments-${id}`);
+    // Load comments using the story _id as key so both old and new URLs
+    // share the same comment thread.
+    // (We'll re-fetch them once the article loads, using its _id.)
+  }, [id, navigate]);
+
+  // Load comments whenever the article's _id is known
+  useEffect(() => {
+    if (!article?._id) return;
+    const saved = localStorage.getItem(`comments-${article._id}`);
     if (saved) setComments(JSON.parse(saved));
-  }, [id]);
+  }, [article?._id]);
 
   const handleComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !text.trim()) return;
+    if (!name.trim() || !text.trim() || !article?._id) return;
 
     const newComment: Comment = {
       id: Date.now().toString(),
@@ -91,9 +148,7 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
     const updated = [newComment, ...comments];
     setComments(updated);
-    if (id) {
-      localStorage.setItem(`comments-${id}`, JSON.stringify(updated));
-    }
+    localStorage.setItem(`comments-${article._id}`, JSON.stringify(updated));
     setName('');
     setText('');
   };
@@ -129,7 +184,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* ── Main Content ── */}
         <div className="lg:col-span-8">
-          {/* Back Button */}
           <Link
             to="/news"
             className="inline-flex items-center gap-2 text-sm font-bold text-zinc-500
@@ -138,7 +192,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
             <ChevronLeft size={16} /> Back to News
           </Link>
 
-          {/* Date + Title */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -158,7 +211,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
             </h1>
           </motion.div>
 
-          {/* Cover Image */}
           {article.showCoverImage && article.image && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -179,7 +231,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
             </motion.div>
           )}
 
-          {/* Excerpt */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -195,7 +246,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
             </p>
           </motion.div>
 
-          {/* Full Body */}
           {article.body && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -209,7 +259,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
             </motion.div>
           )}
 
-          {/* Divider */}
           <div
             className={`h-px w-full mb-10 ${
               isDarkMode ? 'bg-white/10' : 'bg-zinc-200'
@@ -229,7 +278,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
               </h3>
             </div>
 
-            {/* Comment Form */}
             <form onSubmit={handleComment} className="mb-10">
               <div className="flex flex-col gap-4">
                 <input
@@ -269,7 +317,6 @@ export const NewsDetail = ({ isDarkMode }: { isDarkMode: boolean }) => {
               </div>
             </form>
 
-            {/* Comment List */}
             {comments.length === 0 ? (
               <p className="text-zinc-500 text-sm">
                 No comments yet. Be the first!
