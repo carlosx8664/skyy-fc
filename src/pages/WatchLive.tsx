@@ -1,233 +1,198 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
+import {
+  Film,
+  PlayCircle,
+  Calendar,
+  Eye,
+  MessageSquare,
+  ThumbsUp,
+  Radio,
+} from 'lucide-react';
 import { client } from '../lib/sanityClient';
-import { Radio, PlayCircle, Lock, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 interface LiveStream {
+  _id: string;
   isLive: boolean;
   youtubeUrl: string;
   matchTitle: string;
+  views?: number;
+  likes?: number;
 }
 
 interface ReplayMatch {
   _id: string;
   title: string;
+  slug: string;
   videoUrl: string;
   date?: string;
-  season?: string; // Add season field
+  season?: string;
+  likes?: number;
+  views?: number;
+  comments?: { _key: string }[];
 }
-
-const MATCHES_PER_PAGE = 5;
-
-const getEmbedUrl = (url: string, autoplay: boolean) => {
-  if (!url) return null;
-
-  const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
-  const longMatch = url.match(/[?&]v=([^?&]+)/);
-  const id = shortMatch?.[1] ?? longMatch?.[1];
-
-  if (!id) return null;
-
-  const ap = autoplay ? 1 : 0;
-  return `https://www.youtube.com/embed/${id}?autoplay=${ap}&mute=1&rel=0&modestbranding=1`;
-};
 
 const formatDate = (dateStr?: string) => {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
+  return d
+    .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+    .toUpperCase();
 };
 
-// Helper to get season from date
+const formatCount = (n: number) => {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}K`;
+  return String(n);
+};
+
 const getSeasonFromDate = (dateStr?: string): string => {
-  if (!dateStr) return '2026/27'; // Default to current season
-  
+  if (!dateStr) return '2026/27';
   const d = new Date(dateStr);
   const year = d.getFullYear();
-  const month = d.getMonth(); // 0 = Jan, 11 = Dec
-  
-  // Season runs from August to July
-  // If month is August (7) or later, season is year/(year+1)
-  // Otherwise season is (year-1)/year
-  if (month >= 8) { // August-December
-    return `${year}/${year + 1}`;
-  } else { // January-July
-    return `${year - 1}/${year}`;
-  }
+  const month = d.getMonth();
+  if (month >= 8) return `${year}/${year + 1}`;
+  return `${year - 1}/${year}`;
 };
 
 export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [stream, setStream] = useState<LiveStream | null>(null);
   const [replays, setReplays] = useState<ReplayMatch[]>([]);
-  const [selectedReplayId, setSelectedReplayId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [selectedSeason, setSelectedSeason] = useState<string>('2026/27'); // Default to current season
+  const [selectedSeason, setSelectedSeason] = useState<string>('all');
 
-  // Get unique seasons from matches
   const availableSeasons = useMemo(() => {
-    const seasons = new Set(replays.map(m => m.season || getSeasonFromDate(m.date)));
-    return Array.from(seasons).sort((a, b) => {
-      // Sort by year descending (most recent first)
-      const yearA = parseInt(a.split('/')[0]);
-      const yearB = parseInt(b.split('/')[0]);
-      return yearB - yearA;
-    });
+    const seasons = new Set(replays.map((m) => m.season || getSeasonFromDate(m.date)));
+    return Array.from(seasons).sort(
+      (a, b) => parseInt(b.split('/')[0]) - parseInt(a.split('/')[0])
+    );
   }, [replays]);
 
-  // Filter matches by selected season
   const filteredReplays = useMemo(() => {
-    return replays.filter(m => {
-      const season = m.season || getSeasonFromDate(m.date);
-      return season === selectedSeason;
-    });
+    if (selectedSeason === 'all') return replays;
+    return replays.filter((m) => (m.season || getSeasonFromDate(m.date)) === selectedSeason);
   }, [replays, selectedSeason]);
 
   useEffect(() => {
     let cancelled = false;
-
-    const run = async () => {
+    (async () => {
       setLoading(true);
       try {
         const [live, past] = await Promise.all([
           client.fetch<LiveStream | null>(
             `*[_type == "liveStream"][0]{
-              isLive,
-              youtubeUrl,
-              matchTitle
+              _id, isLive, youtubeUrl, matchTitle, views, likes
             }`
           ),
           client.fetch<ReplayMatch[]>(
-            `*[_type == "news" && defined(videoUrl)] | order(date desc){
-              _id,
-              title,
-              "videoUrl": videoUrl,
-              date,
-              season // Include season if you add it to Sanity
+            `*[_type == "news" && defined(videoUrl) && defined(slug.current)] | order(date desc){
+              _id, title, "slug": slug.current, "videoUrl": videoUrl, date, season,
+              likes, views,
+              "comments": comments[]{_key}
             }`
           ),
         ]);
-
         if (cancelled) return;
-
         setStream(live);
         setReplays(past ?? []);
-
-        // Auto-select latest replay for current season ONLY if not live
-        if (!(live?.isLive) && (past?.length ?? 0) > 0) {
-          const currentSeason = '2026/27';
-          const currentSeasonMatches = past.filter(m => 
-            (m.season || getSeasonFromDate(m.date)) === currentSeason
-          );
-          
-          if (currentSeasonMatches.length > 0) {
-            setSelectedReplayId(currentSeasonMatches[0]._id);
-          } else {
-            // If no matches in current season, select from latest season
-            const seasons = new Set(past.map(m => m.season || getSeasonFromDate(m.date)));
-            const sortedSeasons = Array.from(seasons).sort((a, b) => {
-              const yearA = parseInt(a.split('/')[0]);
-              const yearB = parseInt(b.split('/')[0]);
-              return yearB - yearA;
-            });
-            
-            if (sortedSeasons.length > 0) {
-              const latestSeasonMatches = past.filter(m => 
-                (m.season || getSeasonFromDate(m.date)) === sortedSeasons[0]
-              );
-              if (latestSeasonMatches.length > 0) {
-                setSelectedReplayId(latestSeasonMatches[0]._id);
-                setSelectedSeason(sortedSeasons[0]);
-              }
-            }
-          }
-        } else {
-          setSelectedReplayId(null);
-        }
       } catch (e) {
-        console.error('❌ Watch fetch error:', e);
+        console.error('❌ Highlights grid fetch error:', e);
       } finally {
         if (!cancelled) setLoading(false);
       }
-    };
-
-    run();
+    })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Reset page when season changes
-  useEffect(() => {
-    setPage(0);
-  }, [selectedSeason]);
-
   const isLive = !!stream?.isLive;
-  const liveEmbedUrl = stream?.youtubeUrl ? getEmbedUrl(stream.youtubeUrl, true) : null;
 
-  const totalPages = Math.ceil(filteredReplays.length / MATCHES_PER_PAGE);
-  const pagedReplays = filteredReplays.slice(page * MATCHES_PER_PAGE, (page + 1) * MATCHES_PER_PAGE);
-
-  const selectedReplay = useMemo(
-    () => replays.find((r) => r._id === selectedReplayId) ?? null,
-    [replays, selectedReplayId]
-  );
-
-  const replayEmbedUrl = selectedReplay?.videoUrl ? getEmbedUrl(selectedReplay.videoUrl, true) : null;
-
-  const activeTitle = isLive ? stream?.matchTitle ?? 'LIVE' : selectedReplay?.title ?? 'WATCH';
-  const activeEmbedUrl = isLive ? liveEmbedUrl : replayEmbedUrl;
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    // If selected replay is not on the new page, select the first on that page
-    const newPageReplays = filteredReplays.slice(newPage * MATCHES_PER_PAGE, (newPage + 1) * MATCHES_PER_PAGE);
-    const stillVisible = newPageReplays.find((r) => r._id === selectedReplayId);
-    if (!stillVisible && newPageReplays.length > 0) {
-      setSelectedReplayId(newPageReplays[0]._id);
-    }
+  const t = {
+    pageBg: isDarkMode ? 'bg-zinc-950' : 'bg-zinc-50',
+    cardBg: isDarkMode ? 'bg-zinc-900' : 'bg-white',
+    cardBorder: isDarkMode ? 'border-white/5' : 'border-zinc-200',
+    text: isDarkMode ? 'text-white' : 'text-zinc-900',
+    textMuted: isDarkMode ? 'text-zinc-400' : 'text-zinc-500',
   };
 
   return (
-    <div className={`pt-6 pb-24 min-h-screen ${isDarkMode ? 'bg-zinc-950' : 'bg-zinc-50'}`}>
-      <div className="max-w-6xl mx-auto px-6">
+    <div className={`pt-6 pb-24 min-h-screen ${t.pageBg}`}>
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-10 md:mb-12">
           <div className="p-2 rounded-lg bg-[#EFDC43]/10 text-[#EFDC43]">
-            <Radio size={24} />
+            <Film size={24} />
           </div>
-
-          <div>
-            <h1 className={`text-4xl font-black tracking-tight uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-              Watch
-            </h1>
-            <p className={`text-sm mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
-              {activeTitle}
-            </p>
-          </div>
-
+          <h2 className={`text-2xl md:text-3xl font-bold tracking-tight uppercase ${t.text}`}>
+            Highlights
+          </h2>
           {isLive && (
             <span className="ml-auto flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-black uppercase tracking-widest">
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              Live
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> Live Now
             </span>
           )}
         </div>
 
-        {/* Season Tabs */}
+        {/* Live card — static banner while stream is on */}
+        {isLive && stream && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mb-8 rounded-sm overflow-hidden border-2 border-red-500/40 ${
+              isDarkMode ? 'bg-zinc-900' : 'bg-white'
+            }`}
+          >
+            <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-red-900 via-zinc-900 to-black">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-black uppercase tracking-widest">
+                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> Live
+                </div>
+                <Radio size={56} className="text-white/80" />
+              </div>
+              <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-sm uppercase tracking-wider">
+                Streaming Now
+              </div>
+            </div>
+            <div className="p-4">
+              <h3 className={`font-black uppercase tracking-tight text-base mb-1 ${t.text}`}>
+                {stream.matchTitle}
+              </h3>
+              <p className={`text-[11px] uppercase font-bold ${t.textMuted}`}>
+                Watch live on our Facebook page
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Season filter */}
         {availableSeasons.length > 1 && !loading && (
           <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-            {availableSeasons.map(season => (
+            <button
+              onClick={() => setSelectedSeason('all')}
+              className={`px-4 py-2 rounded-full text-sm font-black uppercase tracking-tight transition-all whitespace-nowrap ${
+                selectedSeason === 'all'
+                  ? 'bg-[#EFDC43] text-black'
+                  : isDarkMode
+                  ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  : 'bg-zinc-200 text-zinc-600 hover:bg-zinc-300'
+              }`}
+            >
+              All
+            </button>
+            {availableSeasons.map((season) => (
               <button
                 key={season}
                 onClick={() => setSelectedSeason(season)}
-                className={`px-4 py-2 rounded-full text-sm font-black uppercase tracking-tight transition-all whitespace-nowrap
-                  ${selectedSeason === season 
-                    ? 'bg-[#EFDC43] text-black' 
-                    : isDarkMode 
-                      ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700' 
-                      : 'bg-zinc-200 text-zinc-600 hover:bg-zinc-300'
-                  }`}
+                className={`px-4 py-2 rounded-full text-sm font-black uppercase tracking-tight transition-all whitespace-nowrap ${
+                  selectedSeason === season
+                    ? 'bg-[#EFDC43] text-black'
+                    : isDarkMode
+                    ? 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    : 'bg-zinc-200 text-zinc-600 hover:bg-zinc-300'
+                }`}
               >
                 {season}
               </button>
@@ -235,134 +200,77 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
           </div>
         )}
 
-        {/* Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Player */}
-          <div className="lg:col-span-8">
-            {loading ? (
-              <div className={`aspect-video rounded-2xl flex items-center justify-center ${isDarkMode ? 'bg-zinc-900' : 'bg-zinc-200'}`}>
-                <p className={`text-sm animate-pulse ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                  Loading...
-                </p>
-              </div>
-            ) : activeEmbedUrl ? (
-              <div className="aspect-video rounded-2xl overflow-hidden border border-white/10">
-                <iframe
-                  src={activeEmbedUrl}
-                  title={activeTitle}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              </div>
-            ) : (
-              <div
-                className={`aspect-video rounded-2xl flex flex-col items-center justify-center border gap-4 ${
-                  isDarkMode ? 'bg-zinc-900 border-white/10' : 'bg-zinc-100 border-zinc-200'
-                }`}
-              >
-                <Radio size={48} className="opacity-20" style={{ color: isDarkMode ? 'white' : 'black' }} />
-                <p className={`text-sm font-bold uppercase tracking-widest opacity-40 ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-                  {isLive ? 'Live match link missing' : 'Pick a match to watch'}
-                </p>
-                <p className={`text-xs opacity-30 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                  {isLive ? 'Set liveStream.youtubeUrl in Sanity' : 'No video selected'}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <aside className="lg:col-span-4">
-            <div className={`border rounded-2xl overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-white/10' : 'bg-white border-zinc-200 shadow-sm'}`}>
-              <div className="bg-[#EFDC43] text-black px-4 py-3 font-black uppercase tracking-tighter text-sm flex items-center justify-between">
-                <span>Previous matches</span>
-                <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest">
-                  <Calendar size={12} /> {selectedSeason}
-                </span>
-              </div>
-
-              <div className="p-3">
-                {loading ? (
-                  <p className={`text-sm p-3 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Loading matches...</p>
-                ) : filteredReplays.length === 0 ? (
-                  <p className={`text-sm p-3 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                    No matches available for {selectedSeason} season.
-                  </p>
-                ) : (
-                  <>
-                    <div className="space-y-2">
-                      {pagedReplays.map((m) => {
-                        const active = m._id === selectedReplayId;
-                        const disabled = isLive;
-
-                        return (
-                          <button
-                            key={m._id}
-                            disabled={disabled}
-                            onClick={() => setSelectedReplayId(m._id)}
-                            className={[
-                              'w-full text-left rounded-xl px-3 py-3 border transition',
-                              disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-[#EFDC43]/60',
-                              active ? 'border-[#EFDC43] bg-[#EFDC43]/10' : (isDarkMode ? 'border-white/10 bg-zinc-950/30' : 'border-zinc-200 bg-white'),
-                            ].join(' ')}
-                            title={disabled ? 'Live match is on. Replays are disabled.' : m.title}
-                          >
-                            <div className="flex items-start gap-3">
-                              <PlayCircle className={`${active ? 'text-[#EFDC43]' : (isDarkMode ? 'text-zinc-400' : 'text-zinc-500')}`} size={18} />
-                              <div className="min-w-0">
-                                <p className={`font-black uppercase tracking-tight text-sm ${isDarkMode ? 'text-white' : 'text-zinc-900'} truncate`}>
-                                  {m.title}
-                                </p>
-                                {m.date && (
-                                  <p className={`text-[11px] mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                                    {formatDate(m.date)}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
+        {/* Grid */}
+        {loading ? (
+          <p className={`text-sm animate-pulse ${t.textMuted}`}>Loading highlights...</p>
+        ) : filteredReplays.length === 0 ? (
+          <p className={`text-sm ${t.textMuted}`}>No highlights yet. Check back soon.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {filteredReplays.map((m) => (
+              <Link key={m._id} to={`/highlights/${m.slug}`} className="block">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className={`group cursor-pointer rounded-sm overflow-hidden border ${
+                    isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'
+                  }`}
+                >
+                  {/* Placeholder thumbnail */}
+                  <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-zinc-800 to-zinc-950">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <PlayCircle
+                        size={48}
+                        className="text-[#EFDC43] opacity-80 transition-transform duration-300 group-hover:scale-110"
+                      />
                     </div>
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className={`flex items-center justify-between mt-3 pt-3 border-t text-[10px] uppercase font-black
-                        ${isDarkMode ? 'border-white/5 text-zinc-500' : 'border-zinc-100 text-zinc-400'}`}>
-                        <button
-                          onClick={() => handlePageChange(page - 1)}
-                          disabled={page === 0}
-                          className={`flex items-center gap-1 transition-colors disabled:opacity-30
-                            ${page === 0 ? 'cursor-default' : 'hover:text-[#EFDC43] cursor-pointer'}`}
-                        >
-                          <ChevronLeft size={12} /> Prev
-                        </button>
-                        <span className={isDarkMode ? 'text-zinc-600' : 'text-zinc-300'}>
-                          {page + 1} / {totalPages}
-                        </span>
-                        <button
-                          onClick={() => handlePageChange(page + 1)}
-                          disabled={page === totalPages - 1}
-                          className={`flex items-center gap-1 transition-colors disabled:opacity-30
-                            ${page === totalPages - 1 ? 'cursor-default' : 'hover:text-[#EFDC43] cursor-pointer'}`}
-                        >
-                          Next <ChevronRight size={12} />
-                        </button>
+                    {m.season && (
+                      <div className="absolute top-3 left-3 bg-[#EFDC43] text-black text-[10px] font-black px-2 py-1 rounded-sm uppercase tracking-wider">
+                        {m.season}
                       </div>
                     )}
-                  </>
-                )}
+                  </div>
 
-                {isLive && (
-                  <p className={`text-[11px] mt-3 px-1 ${isDarkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                    Live match is on—replays will unlock when live ends.
-                  </p>
-                )}
-              </div>
-            </div>
-          </aside>
-        </div>
+                  <div className="p-4">
+                    <h3
+                      className={`font-black uppercase tracking-tight text-sm mb-2 line-clamp-2 ${t.text}`}
+                    >
+                      {m.title}
+                    </h3>
+                    <div className="flex items-center gap-3 text-[10px] uppercase font-bold text-zinc-500 flex-wrap">
+                      {m.date && (
+                        <span className="flex items-center gap-1">
+                          <Calendar size={10} />
+                          {formatDate(m.date)}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Eye size={10} />
+                        {formatCount(m.views ?? 0)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <ThumbsUp size={10} />
+                        {formatCount(m.likes ?? 0)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MessageSquare size={10} />
+                        {m.comments?.length ?? 0}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {!loading && filteredReplays.length > 0 && (
+          <p className={`mt-10 text-center text-xs uppercase font-bold ${t.textMuted}`}>
+            <Film size={12} className="inline mr-1" />
+            {filteredReplays.length} highlight{filteredReplays.length !== 1 ? 's' : ''} available
+          </p>
+        )}
       </div>
     </div>
   );

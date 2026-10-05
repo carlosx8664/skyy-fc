@@ -5,6 +5,7 @@ import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
 import { Squad } from './pages/Squad';
 import { WatchLive } from './pages/WatchLive';
+import { WatchMatch } from './pages/WatchMatch';
 import { News } from './pages/News';
 import { NewsDetail } from './pages/NewsDetail';
 import { Gallery } from './pages/Gallery';
@@ -39,14 +40,15 @@ export default function App() {
 
       <main className="min-h-[80vh]">
         <Routes>
-          <Route path="/"         element={<Home       isDarkMode={isDarkMode} />} />
-          <Route path="/squad"    element={<PageLayout><Squad     isDarkMode={isDarkMode} /></PageLayout>} />
-          <Route path="/watch"    element={<PageLayout><WatchLive isDarkMode={isDarkMode} /></PageLayout>} />
-          <Route path="/news"     element={<PageLayout><News      isDarkMode={isDarkMode} /></PageLayout>} />
-          <Route path="/news/:id" element={<PageLayout><NewsDetail isDarkMode={isDarkMode} /></PageLayout>} />
-          <Route path="/gallery"  element={<PageLayout><Gallery   isDarkMode={isDarkMode} /></PageLayout>} />
-          <Route path="/about"    element={<PageLayout><About     isDarkMode={isDarkMode} /></PageLayout>} />
-          <Route path="/review"   element={<PageLayout><Review    isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/"                    element={<Home isDarkMode={isDarkMode} />} />
+          <Route path="/squad"               element={<PageLayout><Squad isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/highlights"          element={<PageLayout><WatchLive isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/highlights/:slug"    element={<PageLayout><WatchMatch isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/news"                element={<PageLayout><News isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/news/:id"            element={<PageLayout><NewsDetail isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/gallery"             element={<PageLayout><Gallery isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/about"               element={<PageLayout><About isDarkMode={isDarkMode} /></PageLayout>} />
+          <Route path="/review"              element={<PageLayout><Review isDarkMode={isDarkMode} /></PageLayout>} />
         </Routes>
       </main>
 
