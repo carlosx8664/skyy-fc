@@ -5,9 +5,6 @@ import {
   Film,
   PlayCircle,
   Calendar,
-  Eye,
-  MessageSquare,
-  ThumbsUp,
   Radio,
 } from 'lucide-react';
 import { client } from '../lib/sanityClient';
@@ -17,8 +14,6 @@ interface LiveStream {
   isLive: boolean;
   youtubeUrl: string;
   matchTitle: string;
-  views?: number;
-  likes?: number;
 }
 
 interface ReplayMatch {
@@ -28,9 +23,6 @@ interface ReplayMatch {
   videoUrl: string;
   date?: string;
   season?: string;
-  likes?: number;
-  views?: number;
-  comments?: { _key: string }[];
 }
 
 const formatDate = (dateStr?: string) => {
@@ -42,12 +34,6 @@ const formatDate = (dateStr?: string) => {
     .toUpperCase();
 };
 
-const formatCount = (n: number) => {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}K`;
-  return String(n);
-};
-
 const getSeasonFromDate = (dateStr?: string): string => {
   if (!dateStr) return '2026/27';
   const d = new Date(dateStr);
@@ -56,6 +42,22 @@ const getSeasonFromDate = (dateStr?: string): string => {
   if (month >= 8) return `${year}/${year + 1}`;
   return `${year - 1}/${year}`;
 };
+
+// Extract YouTube video ID from any of the common URL shapes
+const getYouTubeId = (url?: string): string | null => {
+  if (!url) return null;
+  const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
+  const longMatch = url.match(/[?&]v=([^?&]+)/);
+  const embedMatch = url.match(/youtube\.com\/embed\/([^?&]+)/);
+  return shortMatch?.[1] ?? longMatch?.[1] ?? embedMatch?.[1] ?? null;
+};
+
+// High-quality YouTube thumbnail with a graceful fallback handled in the img onError
+const getYouTubeThumbnail = (videoId: string) =>
+  `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+
+const getYouTubeThumbnailFallback = (videoId: string) =>
+  `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
 export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const [stream, setStream] = useState<LiveStream | null>(null);
@@ -83,14 +85,12 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
         const [live, past] = await Promise.all([
           client.fetch<LiveStream | null>(
             `*[_type == "liveStream"][0]{
-              _id, isLive, youtubeUrl, matchTitle, views, likes
+              _id, isLive, youtubeUrl, matchTitle
             }`
           ),
           client.fetch<ReplayMatch[]>(
             `*[_type == "news" && defined(videoUrl) && defined(slug.current)] | order(date desc){
-              _id, title, "slug": slug.current, "videoUrl": videoUrl, date, season,
-              likes, views,
-              "comments": comments[]{_key}
+              _id, title, "slug": slug.current, "videoUrl": videoUrl, date, season
             }`
           ),
         ]);
@@ -207,61 +207,81 @@ export const WatchLive = ({ isDarkMode }: { isDarkMode: boolean }) => {
           <p className={`text-sm ${t.textMuted}`}>No highlights yet. Check back soon.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {filteredReplays.map((m) => (
-              <Link key={m._id} to={`/highlights/${m.slug}`} className="block">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className={`group cursor-pointer rounded-sm overflow-hidden border ${
-                    isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'
-                  }`}
-                >
-                  {/* Placeholder thumbnail */}
-                  <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-zinc-800 to-zinc-950">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <PlayCircle
-                        size={48}
-                        className="text-[#EFDC43] opacity-80 transition-transform duration-300 group-hover:scale-110"
-                      />
-                    </div>
-                    {m.season && (
-                      <div className="absolute top-3 left-3 bg-[#EFDC43] text-black text-[10px] font-black px-2 py-1 rounded-sm uppercase tracking-wider">
-                        {m.season}
-                      </div>
-                    )}
-                  </div>
+            {filteredReplays.map((m) => {
+              const videoId = getYouTubeId(m.videoUrl);
 
-                  <div className="p-4">
-                    <h3
-                      className={`font-black uppercase tracking-tight text-sm mb-2 line-clamp-2 ${t.text}`}
-                    >
-                      {m.title}
-                    </h3>
-                    <div className="flex items-center gap-3 text-[10px] uppercase font-bold text-zinc-500 flex-wrap">
-                      {m.date && (
-                        <span className="flex items-center gap-1">
-                          <Calendar size={10} />
-                          {formatDate(m.date)}
-                        </span>
+              return (
+                <Link key={m._id} to={`/highlights/${m.slug}`} className="block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className={`group cursor-pointer rounded-sm overflow-hidden border ${
+                      isDarkMode ? 'bg-zinc-900 border-white/5' : 'bg-white border-zinc-200 shadow-sm'
+                    }`}
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-zinc-800 to-zinc-950">
+                      {videoId ? (
+                        <>
+                          <img
+                            src={getYouTubeThumbnail(videoId)}
+                            alt={m.title}
+                            loading="lazy"
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              // Fall back to hqdefault if maxresdefault doesn't exist
+                              if (!img.dataset.fallbackApplied) {
+                                img.dataset.fallbackApplied = '1';
+                                img.src = getYouTubeThumbnailFallback(videoId);
+                              }
+                            }}
+                          />
+                          {/* Soft dark overlay so the play icon and badge stay legible */}
+                          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors" />
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Film size={40} className="text-zinc-700" />
+                        </div>
                       )}
-                      <span className="flex items-center gap-1">
-                        <Eye size={10} />
-                        {formatCount(m.views ?? 0)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp size={10} />
-                        {formatCount(m.likes ?? 0)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageSquare size={10} />
-                        {m.comments?.length ?? 0}
-                      </span>
+
+                      {/* Play icon overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <PlayCircle
+                          size={56}
+                          className="text-[#EFDC43] drop-shadow-lg transition-transform duration-300 group-hover:scale-110"
+                        />
+                      </div>
+
+                      {/* Season badge */}
+                      {m.season && (
+                        <div className="absolute top-3 left-3 bg-[#EFDC43] text-black text-[10px] font-black px-2 py-1 rounded-sm uppercase tracking-wider">
+                          {m.season}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </motion.div>
-              </Link>
-            ))}
+
+                    <div className="p-4">
+                      <h3
+                        className={`font-black uppercase tracking-tight text-sm mb-2 line-clamp-2 ${t.text}`}
+                      >
+                        {m.title}
+                      </h3>
+                      <div className="flex items-center gap-3 text-[10px] uppercase font-bold text-zinc-500 flex-wrap">
+                        {m.date && (
+                          <span className="flex items-center gap-1">
+                            <Calendar size={10} />
+                            {formatDate(m.date)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
+              );
+            })}
           </div>
         )}
 
