@@ -5,7 +5,7 @@ import imageUrlBuilder from '@sanity/image-url';
 import { client } from '../lib/sanityClient';
 
 const builder = imageUrlBuilder(client);
-const urlFor = (source: any) => builder.image(source).width(900).url();
+const urlFor = (source: any) => builder.image(source).width(1400).url();
 
 interface MatchPopupProps {
   isDarkMode: boolean;
@@ -94,7 +94,7 @@ export const MatchPopup = ({ isDarkMode }: MatchPopupProps) => {
             exit={{ scale: 0.96, opacity: 0 }}
             transition={{ type: 'spring', damping: 26, stiffness: 280 }}
             onClick={(e) => e.stopPropagation()}
-            className={`relative max-w-md w-full rounded-2xl overflow-hidden shadow-2xl
+            className={`relative max-w-2xl w-full rounded-2xl overflow-hidden shadow-2xl
               will-change-transform
               ${isDarkMode ? 'bg-zinc-900' : 'bg-white'}`}
           >
